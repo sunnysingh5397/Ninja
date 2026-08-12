@@ -1,0 +1,2570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ninja Auto-Battler - Drag & Drop Squad Hub</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&display=swap');
+
+        * { box-sizing: border-box; user-select: none; }
+        body { 
+            font-family: 'Rajdhani', sans-serif; 
+            background: radial-gradient(circle at center, #1b1c2e 0%, #0a0b10 100%); 
+            color: #fff; 
+            margin: 0; 
+            padding: 12px; 
+            min-height: 100vh;
+        }
+        .hidden { display: none !important; }
+        .screen { max-width: 820px; margin: 0 auto; }
+
+        /* HEADER & CURRENCY HUB */
+        .top-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            background: rgba(20, 22, 38, 0.85); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            padding: 10px 16px; 
+            border-radius: 12px; 
+            margin-bottom: 12px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        .player-profile { display: flex; align-items: center; gap: 10px; }
+        .level-badge { 
+            background: linear-gradient(135deg, #ff9d00 0%, #ff5500 100%); 
+            padding: 3px 8px; 
+            border-radius: 4px; 
+            font-family: 'Orbitron', sans-serif; 
+            font-size: 11px; 
+            font-weight: 900; 
+        }
+        .player-name { font-weight: 700; font-size: 14px; letter-spacing: 0.5px; color: #d0d5e0; }
+
+        .currencies { display: flex; align-items: center; gap: 12px; }
+        .currencies span { 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            font-weight: 700; 
+        }
+        .coin-silver { color: #d0d5e0; }
+        .coin-gold { color: #ffd700; text-shadow: 0 0 8px rgba(255,215,0,0.4); }
+        .coin-energy { color: #00f2fe; text-shadow: 0 0 8px rgba(0,242,254,0.4); }
+
+        /* HORIZONTAL STAGE SELECT CARDS */
+        .stage-card-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(25, 28, 45, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+        }
+        .stage-card-row.locked { opacity: 0.35; }
+        .stage-card-icon { font-size: 26px; width: 42px; text-align: center; flex-shrink: 0; }
+        .stage-card-info { flex: 1; min-width: 0; }
+        .stage-card-title { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 13px; color: #ff9d00; }
+        .stage-card-sub { font-size: 10px; color: #9da8c7; margin-top: 2px; }
+        .stage-card-actions { display: flex; flex-direction: column; gap: 4px; align-items: stretch; flex-shrink: 0; }
+        .stage-card-actions .btn { font-size: 10px; padding: 6px 10px; white-space: nowrap; }
+        .stage-card-actions .claimed-text { font-size: 9px; color: #7982a9; text-align: center; }
+        .stage-badge { 
+            background: linear-gradient(135deg, #ff2a5f 0%, #b3002d 100%); 
+            padding: 3px 10px; 
+            border-radius: 6px; 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 900; 
+        }
+
+        /* CONTAINER STYLING */
+        .setup-container, .intermission-actions { 
+            background: rgba(20, 22, 38, 0.85); 
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            padding: 18px; 
+            border-radius: 12px; 
+            margin-bottom: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .section-title { 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px; 
+            color: #7982a9; 
+            margin: 14px 0 10px; 
+            font-weight: 700; 
+            letter-spacing: 1.5px;
+            text-transform: uppercase; 
+        }
+
+        /* MAIN MENU HUB LAYOUT */
+        .menu-hub {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+            background: rgba(20, 22, 38, 0.9);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7);
+            text-align: center;
+            margin-top: 20px;
+        }
+        .menu-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00f2fe 0%, #ff0055 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+        }
+        .menu-subtitle { font-size: 14px; color: #818ba8; margin-bottom: 30px; letter-spacing: 1px; }
+        
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+        }
+        .menu-btn {
+            background: rgba(30, 34, 56, 0.9);
+            border: 1px solid rgba(255,255,255,0.12);
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .menu-btn:hover {
+            transform: translateY(-4px);
+            border-color: #00f2fe;
+            box-shadow: 0 8px 25px rgba(0,242,254,0.3);
+            background: rgba(40, 46, 75, 0.9);
+        }
+        .menu-btn-icon { font-size: 26px; }
+        .menu-btn-text { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 700; color: #fff; }
+        .menu-btn-sub { font-size: 11px; color: #7982a9; }
+        .menu-btn.primary {
+            grid-column: span 2;
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            border: none;
+        }
+        .menu-btn.primary .menu-btn-text, .menu-btn.primary .menu-btn-sub { color: #050a14; }
+        .menu-btn.primary:hover { box-shadow: 0 8px 25px rgba(0,242,254,0.5); }
+
+        /* UNIFORM CARD STYLING & STYLISH SELECTION EFFECTS */
+        .squad-grid, .roster-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        .roster-grid {
+            max-height: 260px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+        .ninja-card-item {
+            background: rgba(25, 28, 45, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            padding: 10px 8px;
+            text-align: center;
+            cursor: grab;
+            transition: all 0.2s ease;
+            position: relative;
+            height: 90px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .ninja-card-item:active { cursor: grabbing; }
+        .ninja-card-item:hover {
+            border-color: #00f2fe;
+            box-shadow: 0 4px 15px rgba(0,242,254,0.25);
+            transform: translateY(-2px);
+        }
+
+        /* PORTRAIT-STYLE CARDS (bigger art area + corner role badge + footer with HP bar) */
+        .ninja-card-item.portrait-mode, .card.portrait-mode {
+            height: 128px;
+            padding: 0;
+            justify-content: flex-start;
+            align-items: stretch;
+            overflow: hidden;
+        }
+        .portrait-compact .portrait-art { min-height: 26px; }
+        .portrait-emoji { font-size: 30px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        .portrait-compact .portrait-emoji { font-size: 20px; }
+        .portrait-badge {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            border: 2px solid rgba(255,255,255,0.7);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+        .portrait-footer {
+            width: 100%;
+            padding: 3px 4px 5px;
+            background: rgba(10,10,18,0.92);
+            text-align: center;
+            flex-shrink: 0;
+            min-height: 30px;
+            box-sizing: border-box;
+        }
+        .portrait-name { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 10px; color: #ff9d00; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .portrait-stats { font-size: 8px; color: #9da8c7; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .portrait-hpbar { height: 4px; background: rgba(255,255,255,0.12); border-radius: 2px; margin-top: 3px; overflow: hidden; }
+        .portrait-hpbar-fill { height: 100%; background: linear-gradient(90deg, #2ed573, #7bed9f); transition: width 0.3s ease-out; }
+        .portrait-hp-text { font-size: 8px; color: #9da8c7; margin-top: 1px; font-family: 'Orbitron', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* MAIN MENU — compact single-row team strip */
+        .squad-grid-row {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .squad-grid-row .squad-slot {
+            flex: 0 0 82px;
+            height: 100px !important;
+        }
+        .squad-grid-row .ninja-card-item.portrait-mode {
+            height: 100px;
+        }
+        .squad-slot-plus {
+            font-size: 26px;
+            color: #5b6282;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .squad-slot-plus:hover { color: #00f2fe; }
+
+        /* CHARACTER PICKER (opens when tapping an empty team slot) */
+        .picker-tick {
+            width: 26px; height: 26px; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; font-weight: 900; color: #2ed573;
+            flex-shrink: 0;
+        }
+        .picker-tick.ticked { border-color: #2ed573; background: rgba(46,213,115,0.18); }
+
+        .portrait-level-badge {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            background: linear-gradient(135deg, #ff9d00, #ff5500);
+            color: #000;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 8px;
+            font-weight: 900;
+            padding: 1px 4px;
+            border-radius: 4px;
+            z-index: 2;
+        }
+        /* Stylish Selection / Hover Active Glow */
+        .ninja-card-item.selected-glow {
+            border-color: #ff9d00 !important;
+            box-shadow: 0 0 15px rgba(255,157,0,0.6);
+            background: rgba(45, 38, 25, 0.95);
+        }
+        /* Tap-to-select highlight (distinct from the "already in squad" glow) */
+        .ninja-card-item.tap-active {
+            border-color: #00f2fe !important;
+            box-shadow: 0 0 18px rgba(0,242,254,0.85);
+            animation: tapPulse 0.8s infinite alternate;
+        }
+        @keyframes tapPulse {
+            from { box-shadow: 0 0 8px rgba(0,242,254,0.5); }
+            to   { box-shadow: 0 0 22px rgba(0,242,254,0.95); }
+        }
+        .card-name { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 12px; color: #ff9d00; margin-bottom: 2px; }
+        .card-info { font-size: 10px; color: #9da8c7; line-height: 1.3; }
+
+        /* DROP SLOTS FOR SQUAD SETUP */
+        .squad-slot {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            height: 90px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .squad-slot.drag-over {
+            border-color: #00f2fe;
+            background: rgba(0, 242, 254, 0.1);
+            transform: scale(1.02);
+        }
+        .squad-slot .slot-label {
+            position: absolute;
+            top: 4px;
+            left: 6px;
+            font-size: 9px;
+            color: #626b8f;
+            font-weight: bold;
+        }
+        .empty-slot-text { font-size: 10px; color: #5b6282; font-weight: bold; text-transform: uppercase; }
+
+        .roster-card-wrapper { position: relative; }
+        .roster-card-wrapper.disabled { opacity: 0.3; pointer-events: none; filter: grayscale(90%); }
+
+        /* BUTTONS */
+        button { cursor: pointer; border: none; font-weight: 700; font-family: 'Rajdhani', sans-serif; border-radius: 6px; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; }
+        .btn-action { 
+            display: block; 
+            width: 100%; 
+            padding: 14px; 
+            margin-top: 16px; 
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); 
+            color: #050a14; 
+            font-size: 15px; 
+            font-weight: 900;
+        }
+        .btn-action:disabled { background: #232738; color: #555e7d; cursor: not-allowed; }
+        .btn-sub { padding: 10px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-right: 8px; margin-top: 8px; }
+        .btn { padding: 8px 14px; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.1); }
+        .btn-active { background: #ff9d00; color: #000; font-weight: 900; border-color: #ff9d00; }
+        .back-btn { background: rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; margin-bottom: 10px; font-size: 11px; }
+
+        .controls { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+        .controls .btn { padding: 4px 7px; font-size: 10px; }
+
+        /* BATTLEFIELD */
+        .battlefield { 
+            background: rgba(15, 17, 28, 0.9); 
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 16px; 
+            border-radius: 12px; 
+            box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+            position: relative;
+            overflow: hidden;
+        }
+        .team-title { text-align: center; font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 1.5px; margin: 8px 0; font-weight: 700; }
+        .enemy-title { color: #ff4757; text-shadow: 0 0 8px rgba(255,71,87,0.4); }
+        .player-title { color: #2ed573; text-shadow: 0 0 8px rgba(46,213,115,0.4); }
+
+        /* BATTLE CARDS */
+        .card { 
+            background: rgba(25, 28, 45, 0.85); 
+            border-radius: 8px; 
+            padding: 10px 8px; 
+            text-align: center; 
+            position: relative; 
+            border: 2px solid rgba(255,255,255,0.1); 
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            height: 95px;
+        }
+        .card.player { border-color: rgba(46,213,115,0.5); }
+        .card.enemy { border-color: rgba(255,71,87,0.5); }
+        .card.dead { opacity: 0.25; filter: grayscale(100%); border-color: #333 !important; }
+
+        .card.attacking { transform: translateY(-8px) scale(1.08); z-index: 10; }
+        .card.atk-normal { border-color: #fff !important; box-shadow: 0 0 20px rgba(255,255,255,0.8); }
+        .card.atk-special { border-color: #00f2fe !important; box-shadow: 0 0 25px #00f2fe; animation: pulseGlow 0.4s infinite alternate; }
+        .card.atk-rage { border-color: #ff0055 !important; box-shadow: 0 0 30px #ff0055; animation: rageGlow 0.3s infinite alternate; }
+        .card.atk-heal { border-color: #2ed573 !important; box-shadow: 0 0 25px #2ed573; animation: healGlow 0.4s infinite alternate; }
+
+        @keyframes pulseGlow { from { filter: drop-shadow(0 0 5px #00f2fe); } to { filter: drop-shadow(0 0 15px #00f2fe); } }
+        @keyframes rageGlow { from { filter: drop-shadow(0 0 8px #ff0055); } to { filter: drop-shadow(0 0 22px #ff0055); } }
+        @keyframes healGlow { from { filter: drop-shadow(0 0 6px #2ed573); } to { filter: drop-shadow(0 0 18px #2ed573); } }
+
+        .card.hit { animation: shake 0.3s forwards; border-color: #ffffff !important; }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-6px); } 100% { transform: translateX(0); } }
+
+        .card-slot-tag { position: absolute; top: 3px; left: 6px; font-size: 9px; color: #626b8f; font-weight: bold; }
+        .hp-bar-bg { width: 100%; height: 6px; background: rgba(0,0,0,0.5); border-radius: 3px; overflow: hidden; margin: 4px 0; border: 1px solid rgba(255,255,255,0.05); }
+        .hp-bar-fill { height: 100%; background: linear-gradient(90deg, #2ed573 0%, #7bed9f 100%); transition: width 0.3s ease-out; }
+        .card.enemy .hp-bar-fill { background: linear-gradient(90deg, #ff4757 0%, #ff6b81 100%); }
+        .hp-text { font-size: 10px; font-weight: 700; font-family: 'Orbitron', sans-serif; }
+
+        .side-bar { position: absolute; width: 4px; height: 100%; top: 0; background: rgba(0,0,0,0.4); }
+        .side-bar-left { left: 0; border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
+        .side-bar-right { right: 0; border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
+        .bar-fill-left { width: 100%; background: #00f2fe; position: absolute; bottom: 0; transition: height 0.3s; }
+        .bar-fill-right { width: 100%; background: #ff0055; position: absolute; bottom: 0; transition: height 0.3s; }
+
+        .floating-dmg {
+            position: absolute; font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 18px; pointer-events: none; z-index: 100;
+            animation: floatUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) FORWARDS;
+        }
+        .dmg-normal { color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.8); }
+        .dmg-special { color: #00f2fe; font-size: 22px; text-shadow: 0 0 12px #00f2fe; }
+        .dmg-rage { color: #ff0055; font-size: 26px; text-shadow: 0 0 16px #ff0055; }
+        .dmg-heal { color: #2ed573; font-size: 20px; text-shadow: 0 0 10px #2ed573; }
+        @keyframes floatUp { 0% { opacity: 0; transform: translateY(0) scale(0.6); } 30% { opacity: 1; transform: translateY(-20px) scale(1.2); } 100% { opacity: 0; transform: translateY(-45px) scale(0.9); } }
+
+        .logs-container { margin-top: 12px; background: rgba(10, 12, 20, 0.95); border: 1px solid rgba(255,255,255,0.08); padding: 10px 12px; border-radius: 8px; height: 140px; overflow-y: auto; font-size: 12px; font-family: monospace; }
+        .log-entry { margin-bottom: 4px; padding-bottom: 3px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .log-system { color: #ffd700; font-weight: bold; }
+        .log-player { color: #2ed573; }
+        .log-enemy { color: #ff4757; }
+        .log-special { color: #00f2fe; font-weight: bold; }
+        .log-rage { color: #ff0055; font-weight: bold; }
+        .log-heal-player { color: #7bed9f; font-weight: bold; }
+        .log-heal-enemy { color: #ff9f9f; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- TOP GLOBAL HEADER -->
+    <div class="top-header">
+        <div class="player-profile">
+            <div class="level-badge" id="playerLevelBadge">LVL 1</div>
+            <div class="player-name" id="playerNameDisplay">Shinobi Master</div>
+        </div>
+        <div class="currencies">
+            <span class="coin-silver">🥈 <span id="silverCoins">500</span></span>
+            <span class="coin-gold">🪙 <span id="goldCoins">50</span></span>
+            <span class="coin-energy">⚡ <span id="energyPoints">100</span></span>
+        </div>
+        <div class="stage-badge" id="waveBadge">Stage 1-1</div>
+    </div>
+
+    <!-- STARTER STYLE SELECT (shown before the main menu, on first launch) -->
+    <div id="starterSelectScreen" class="screen">
+        <div class="menu-hub">
+            <div class="menu-title" style="font-size:22px;">CHOOSE YOUR STYLE</div>
+            <div class="menu-subtitle">Pick a starting path — you'll receive that style's ninja for free</div>
+            <div id="starterBigDisplay" style="width:100%; max-width:320px;"></div>
+            <div id="starterStyleList" style="width:100%; max-width:340px; display:flex; flex-direction:column; gap:10px; margin-top:16px;"></div>
+            <button class="btn-action" id="starterStartBtn" style="max-width:340px;" onclick="confirmStarterChoice()">Start</button>
+        </div>
+    </div>
+
+    <!-- MAIN MENU HUB -->
+    <div id="mainMenuScreen" class="screen hidden">
+        <div class="setup-container" style="margin-top:0;">
+            <div class="section-title" style="margin-top:0;">MY TEAM (TAP + TO ADD, TAP/DRAG FILLED SLOTS TO ARRANGE)</div>
+            <div class="squad-grid" id="squadGrid"></div>
+        </div>
+        <div class="menu-hub">
+            <div class="menu-title">NINJA ARENA</div>
+            <div class="menu-subtitle">Cyber-Anime Auto-Battler Strategy</div>
+
+            <div class="menu-grid">
+                <button class="menu-btn primary" onclick="openScreen('stageSelectScreen')">
+                    <span class="menu-btn-icon">⚔️</span>
+                    <div>
+                        <div class="menu-btn-text">Story Mode</div>
+                        <div class="menu-btn-sub">Deploy squad & conquer stages</div>
+                    </div>
+                </button>
+                <button class="menu-btn" onclick="openScreen('inventoryScreen')">
+                    <span class="menu-btn-icon">🎴</span>
+                    <div class="menu-btn-text">Inventory</div>
+                    <div class="menu-btn-sub">All Unlocked Ninjas</div>
+                </button>
+                <button class="menu-btn" onclick="openScreen('trainingGroundSelectScreen')">
+                    <span class="menu-btn-icon">🏋️</span>
+                    <div class="menu-btn-text">Training Grounds</div>
+                    <div class="menu-btn-sub">Earn Upgrade Materials</div>
+                </button>
+                <button class="menu-btn" onclick="openScreen('upgradeScreen')">
+                    <span class="menu-btn-icon">⚡</span>
+                    <div class="menu-btn-text">Upgrades</div>
+                    <div class="menu-btn-sub">Boost ATK & HP Stats</div>
+                </button>
+                <button class="menu-btn" onclick="alert('Store module coming soon!')">
+                    <span class="menu-btn-icon">🛒</span>
+                    <div class="menu-btn-text">Store</div>
+                    <div class="menu-btn-sub">Summon & Currency Packs</div>
+                </button>
+                <button class="menu-btn" onclick="resetProgress()">
+                    <span class="menu-btn-icon">⚙️</span>
+                    <div class="menu-btn-text">Settings</div>
+                    <div class="menu-btn-sub">Reset Progress</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRAINING GROUND SELECT (choose Materials or Treasure ground, shows today's unlock status) -->
+    <div id="trainingGroundSelectScreen" class="screen hidden">
+        <div class="setup-container">
+            <button class="back-btn" onclick="openScreen('mainMenuScreen')">⬅ Back to Menu</button>
+            <div class="section-title">SELECT TRAINING GROUND</div>
+            <div id="groundSelectList"></div>
+        </div>
+    </div>
+
+    <!-- TRAINING GROUNDS (separate 3-stage material-farming mode) -->
+    <div id="trainingGroundsScreen" class="screen hidden">
+        <div class="setup-container">
+            <button class="back-btn" onclick="openScreen('trainingGroundSelectScreen')">⬅ Back to Grounds</button>
+            <div class="section-title" id="trainingGroundTitle">TRAINING GROUNDS</div>
+            <div style="font-size:11px; color:#9da8c7; margin-bottom:10px;">Clear each difficulty once to unlock raiding it. Both fighting and raiding are only available on this ground's scheduled days.</div>
+            <div id="trainingGrid"></div>
+        </div>
+    </div>
+
+    <!-- UPGRADE CHARACTERS (spend materials to manually level up one chosen character at a time) -->
+    <!-- INVENTORY (read-only collection view of all owned cards) -->
+    <div id="inventoryScreen" class="screen hidden">
+        <div class="setup-container">
+            <button class="back-btn" onclick="openScreen('mainMenuScreen')">⬅ Back to Menu</button>
+            <div class="section-title">INVENTORY</div>
+            <div style="font-size:11px; color:#9da8c7; margin-bottom:10px;" id="inventorySummaryLine"></div>
+            <div id="inventoryActionsPanel" style="margin-bottom:14px;"></div>
+            <div id="inventorySortRow" style="display:flex; gap:8px; margin-bottom:12px;"></div>
+            <div id="inventoryGrid"></div>
+        </div>
+    </div>
+
+    <div id="upgradeScreen" class="screen hidden">
+        <div class="setup-container">
+            <button class="back-btn" onclick="openScreen('mainMenuScreen')">⬅ Back to Menu</button>
+            <div class="section-title">UPGRADE CHARACTERS</div>
+            <div style="font-size:11px; color:#9da8c7; margin-bottom:10px;" id="materialInventoryLine"></div>
+            <div class="roster-grid" id="upgradeRosterGrid" style="max-height:none;"></div>
+        </div>
+    </div>
+
+    <!-- UPGRADE PREVIEW (choose materials, see EXP/Silver/new-stats before confirming) -->
+    <div id="upgradeDetailScreen" class="screen hidden">
+        <div class="setup-container">
+            <button class="back-btn" onclick="openScreen('upgradeScreen')">⬅ Back</button>
+            <div class="section-title">UPGRADE PREVIEW</div>
+            <div id="upgradeDetailCard" style="max-width:180px; margin-bottom:14px;"></div>
+
+            <div class="section-title">CHOOSE MATERIALS</div>
+            <div id="upgradeMaterialInputs"></div>
+
+            <div class="section-title">PREVIEW</div>
+            <div id="upgradePreviewBox" style="font-size:12px; color:#9da8c7; margin-bottom:14px; line-height:1.7; background:rgba(255,255,255,0.04); padding:10px 12px; border-radius:8px;"></div>
+
+            <button class="btn-action" id="confirmUpgradeBtn" onclick="confirmUpgrade()">Confirm Upgrade</button>
+
+            <div class="section-title" style="margin-top:22px; color:#00f2fe;">SKILL LEVEL (separate from character level)</div>
+            <div style="font-size:11px; color:#9da8c7; margin-bottom:8px;" id="skillLevelInfo"></div>
+            <div id="skillMaterialInput"></div>
+            <div id="skillPreviewBox" style="font-size:12px; color:#9da8c7; margin-bottom:14px; line-height:1.7; background:rgba(255,255,255,0.04); padding:10px 12px; border-radius:8px;"></div>
+            <button class="btn-action" id="confirmSkillUpgradeBtn" onclick="confirmSkillUpgrade()">Upgrade Skill</button>
+        </div>
+    </div>
+
+    <!-- BACKUP / RESTORE SAVE (export progress as text to copy elsewhere, or paste it back in) -->
+    <div id="backupScreen" class="screen hidden">
+        <div class="setup-container">
+            <button class="back-btn" onclick="openScreen('mainMenuScreen')">⬅ Back to Menu</button>
+            <div class="section-title">BACKUP / RESTORE PROGRESS</div>
+
+            <div class="section-title" style="margin-top:6px;">EXPORT (copy this somewhere safe)</div>
+            <textarea id="exportBox" readonly style="width:100%; height:90px; font-size:10px; font-family:monospace; background:rgba(10,12,20,0.9); color:#9da8c7; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:8px; box-sizing:border-box;"></textarea>
+            <button class="btn-sub" style="width:100%; margin-top:8px;" onclick="copyExportBox()">Copy to Clipboard</button>
+
+            <div class="section-title" style="margin-top:18px;">IMPORT (paste your saved backup here)</div>
+            <textarea id="importBox" placeholder="Paste your backup text here..." style="width:100%; height:90px; font-size:10px; font-family:monospace; background:rgba(10,12,20,0.9); color:#9da8c7; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:8px; box-sizing:border-box;"></textarea>
+            <button class="btn-action" onclick="importSaveFromBox()">Import & Restore</button>
+        </div>
+    </div>
+
+    <!-- CHARACTER PICKER (opens when tapping an empty team slot on the Main Menu) -->
+    <!-- HELPER LEADER (simulated online-borrow — pick another "player's" leader as your 6th member) -->
+    <div id="helperLeaderScreen" class="screen hidden">
+        <div class="setup-container">
+            <button class="back-btn" onclick="openScreen('setupScreen')">⬅ Back</button>
+            <div class="section-title">CHOOSE A HELPER LEADER</div>
+            <div style="font-size:11px; color:#9da8c7; margin-bottom:10px;">Borrowed for this battle only — cannot be changed or leveled by you.</div>
+            <div id="helperLeaderList"></div>
+        </div>
+    </div>
+
+    <div id="characterPickerScreen" class="screen hidden">
+        <div class="setup-container">
+            <button class="back-btn" onclick="closeCharacterPicker()">⬅ Cancel</button>
+            <div class="section-title">CHOOSE CHARACTERS (<span id="pickerCountLabel">0/0</span>)</div>
+            <button class="btn-action" style="margin-top:0; margin-bottom:12px;" onclick="confirmCharacterPick()">OK</button>
+            <div id="pickerList" style="max-height:55vh; overflow-y:auto;"></div>
+        </div>
+    </div>
+
+    <!-- STAGE SELECT (difficulty tabs live at the top of this screen) -->
+    <div id="stageSelectScreen" class="screen hidden">
+        <div class="setup-container">
+            <button class="back-btn" onclick="openScreen('mainMenuScreen')">⬅ Back to Menu</button>
+            <div class="section-title">DIFFICULTY</div>
+            <div id="difficultyTabs" style="display:flex; gap:8px; margin-bottom:14px;"></div>
+            <div class="section-title" id="stageSelectModeLabel">SELECT STAGE</div>
+            <div id="stageSelectGrid"></div>
+        </div>
+    </div>
+
+    <!-- PRE-BATTLE SETUP (formation only — squad is chosen from the Main Menu) -->
+    <div id="setupScreen" class="screen hidden">
+        <div class="setup-container">
+            <button class="back-btn" onclick="goBackFromSetup()">⬅ Back</button>
+            <div class="section-title">SET YOUR FORMATION (DRAG OR TAP TWO CARDS TO SWAP POSITIONS)</div>
+            <div class="squad-grid" id="formationGrid"></div>
+
+            <button class="btn-action" id="startBattleBtn" onclick="handleStartBattleClick()" disabled>Start Story Stage 1-1</button>
+        </div>
+    </div>
+
+    <!-- BATTLEFIELD -->
+    <div id="battleScreen" class="screen hidden">
+        <div class="controls">
+            <button id="btnPause" class="btn" onclick="togglePause()">PAUSE</button>
+            <button id="btnAuto" class="btn" onclick="toggleAuto()">AUTO: OFF</button>
+            <button class="btn" onclick="returnToMenuFromBattle()">MAIN MENU</button>
+            <button id="speedToggleBtn" class="btn btn-active" onclick="cycleSpeed()">SPD: x1</button>
+        </div>
+
+        <div class="battlefield" id="battlefieldArea">
+            <div class="team-title enemy-title">ENEMIES (TOP: C4-C6, BOTTOM: C1-C3)</div>
+            <div class="grid" id="enemyGrid"></div>
+            <hr style="border: 0.5px solid rgba(255,255,255,0.08); margin: 12px 0;">
+            <div class="team-title player-title">YOUR TEAM (TOP: P1-P3, BOTTOM: P4-P6)</div>
+            <div class="grid" id="playerGrid"></div>
+        </div>
+
+        <div class="logs-container" id="logs"></div>
+    </div>
+
+    <!-- INTERMISSION -->
+    <div id="intermissionScreen" class="screen hidden">
+        <div class="setup-container">
+            <div class="section-title" style="color:#ff9d00;" id="intermissionTitle">WAVE CLEARED!</div>
+            <div class="section-title">CURRENT SQUAD STATUS (DRAG OR TAP TWO CARDS TO REPOSITION)</div>
+            <div class="squad-grid" id="intermissionSquadGrid"></div>
+
+            <div class="intermission-actions">
+                <button class="btn-sub" onclick="healAllSquad()">Heal All HP (100 Silver)</button>
+                <button class="btn-sub" onclick="reviveFallenSquad()">Revive Dead (200 Silver)</button>
+            </div>
+
+            <button class="btn-action" onclick="proceedToNextWave()">Proceed to Next Wave</button>
+        </div>
+    </div>
+
+    <!-- VICTORY (shown when a full stage's waves are cleared) -->
+    <div id="victoryScreen" class="screen hidden">
+        <div class="menu-hub">
+            <div class="menu-title" style="font-size:24px;">🏆 VICTORY!</div>
+            <div class="menu-subtitle" id="victorySubtitle">Stage Cleared!</div>
+            <button class="menu-btn primary" style="width:100%; max-width:340px;" onclick="openScreen('stageSelectScreen')">
+                <span class="menu-btn-text">Back to Stage Select</span>
+                <span class="menu-btn-sub">Choose the next stage</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let silver = 500, gold = 50, playerLevel = 1;
+        let energy = 100;
+        const maxEnergy = 100;
+        const raidEnergyCost = 20;
+
+        const wavesPerStage = 3;
+        const totalStages = 50;
+        const modeStatMult = { easy: 1.0, normal: 1.6, hard: 2.4 };
+        const modeRewardMult = { easy: 1.0, normal: 1.5, hard: 2.2 };
+        let currentMode = 'easy';
+        let modeProgress = { easy: { cleared: 0 }, normal: { cleared: 0 }, hard: { cleared: 0 } };
+        let currentStage = 1;
+        let currentWaveInStage = 1;
+        let stageToPlay = 1;
+
+        /* HELPER LEADER SYSTEM (simulated for now — real version needs an online backend, see chat notes).
+           Your own squad is 5 cards; the 6th "Leader" slot is filled by borrowing another (simulated) player's
+           designated leader for that one battle. Borrowed leaders cannot be modified or leveled by you. */
+        const LEADER_SLOT_INDEX = 5;
+        const helperLeaderPool = [
+            { id: 'helper1', playerName: 'ShadowFox99', name: 'Itachi Clone', hp: 700, atk: 90, speed: 110, role: 'attacker', displayLevel: 45 },
+            { id: 'helper2', playerName: 'LeafNinja22', name: 'Chunin Guard', hp: 400, atk: 45, speed: 95, role: 'attacker', displayLevel: 12 },
+            { id: 'helper3', playerName: 'SandDuneKing', name: 'Desert Warden', hp: 620, atk: 70, speed: 92, role: 'attacker', displayLevel: 30 },
+            { id: 'helper4', playerName: 'MistVillager', name: 'Water Medic', hp: 480, atk: 42, speed: 100, role: 'healer', displayLevel: 25 },
+            { id: 'helper5', playerName: 'CloudStrider7', name: 'Storm Sensei', hp: 900, atk: 110, speed: 105, role: 'attacker', displayLevel: 58 },
+            { id: 'helper6', playerName: 'RookieGenin1', name: 'Academy Student', hp: 300, atk: 28, speed: 85, role: 'attacker', displayLevel: 5 },
+            { id: 'helper7', playerName: 'StoneFistOni', name: 'Iron Brawler', hp: 800, atk: 75, speed: 80, role: 'attacker', displayLevel: 40 },
+            { id: 'helper8', playerName: 'HealerHana', name: 'Blossom Nurse', hp: 520, atk: 50, speed: 98, role: 'healer', displayLevel: 33 }
+        ];
+        let selectedHelperLeaderId = null;
+        let myDesignatedLeaderId = null; // flavor only for now — matters once real online play exists
+        let autoMode = false;
+        let stageStartTime = 0;
+        let lastClearedGlobalIndex = 0;
+
+        /* TRAINING GROUNDS — two separate 3-stage grounds (Easy/Normal/Hard, sequential unlock), each with
+           its own weekday schedule. Fought once per difficulty, then raided (no battle) on unlocked days. */
+        let battleMode = 'story'; // 'story' | 'training' — tells the shared battle engine which flow to use
+        let pendingStartAction = 'story'; // which action the setup screen's Start button should trigger
+        let currentTrainingGround = 'materials'; // 'materials' | 'treasure' — which ground is currently being played
+        let trainingDifficultyPlaying = 'easy';
+        let trainingWaveInStage = 1;
+        let trainingCleared = { easy: false, normal: false, hard: false };
+        let trainingLastRaidDay = { easy: null, normal: null, hard: null };
+        let treasureCleared = { easy: false, normal: false, hard: false };
+        let treasureLastRaidDay = { easy: null, normal: null, hard: null };
+        const trainingRaidEnergyCost = 20;
+
+        const trainingGroundSchedule = {
+            materials: { label: 'Materials Training', days: [0,1,3,5], dayNames: 'Sun/Mon/Wed/Fri' },
+            treasure: { label: 'Treasure Training', days: [0,2,4,6], dayNames: 'Sun/Tue/Thu/Sat' }
+        };
+
+        function isGroundUnlockedToday(groundKey) {
+            const day = new Date().getDay(); // 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
+            return trainingGroundSchedule[groundKey].days.includes(day);
+        }
+        function isTrainingRaidDayUnlocked() {
+            return isGroundUnlockedToday(currentTrainingGround);
+        }
+        function getTrainingClearedState() {
+            return currentTrainingGround === 'treasure' ? treasureCleared : trainingCleared;
+        }
+        function getTrainingRaidDayState() {
+            return currentTrainingGround === 'treasure' ? treasureLastRaidDay : trainingLastRaidDay;
+        }
+        let lastClearedLabel = '1-1';
+        let lastClearedWave = 1;
+
+        // CARD INSTANCES — each owned card (even duplicates of the same character) is its own instance
+        // with its own star/level/skill progress. Squad slots hold instances, not character templates.
+        const MAX_CHAR_LEVEL = 10;
+        const MAX_SKILL_LEVEL = 5;
+        let ownedCards = [];
+        let nextInstanceId = 1;
+
+        function createCardInstance(characterId, star, initLevel, initXp, initSkillLevel, initSkillXp) {
+            const inst = {
+                instanceId: 'card' + (nextInstanceId++),
+                characterId, star: star || 2,
+                level: initLevel || 1, xp: initXp || 0,
+                skillLevel: initSkillLevel || 1, skillXp: initSkillXp || 0
+            };
+            ownedCards.push(inst);
+            return inst;
+        }
+
+        function getCardInstance(instanceId) {
+            return ownedCards.find(c => c.instanceId === instanceId);
+        }
+
+        function xpToNextLevel(level) {
+            return level * 100; // Lv1->2:100, Lv2->3:200, ... Lv9->10:900
+        }
+        function skillXpToNextLevel(level) {
+            return level * 150; // separate curve from character level
+        }
+        function getSkillMultipliers(skillLevel) {
+            const lvl = skillLevel || 1;
+            return { special: 1.6 + (lvl - 1) * 0.1, rage: 2.5 + (lvl - 1) * 0.1 };
+        }
+        function getLeveledStats(base, level) {
+            const growth = 1 + (level - 1) * 0.08; // +8% HP/ATK per level over the base stat
+            return {
+                hp: Math.floor(base.hp * growth),
+                atk: Math.floor(base.atk * growth),
+                speed: base.speed + Math.floor((level - 1) * 0.5)
+            };
+        }
+        // Turns a card instance into a battle/display-ready object (id = instanceId, so duplicates of
+        // the same character are always distinguishable and can coexist in the same squad).
+        function getInstanceDisplay(instance) {
+            const base = masterRoster.find(n => n.id === instance.characterId);
+            const leveled = getLeveledStats(base, instance.level);
+            return {
+                id: instance.instanceId, characterId: instance.characterId, name: base.name,
+                role: base.role, starShine: base.starShine,
+                hp: leveled.hp, atk: leveled.atk, speed: leveled.speed,
+                level: instance.level, skillLevel: instance.skillLevel, star: instance.star
+            };
+        }
+
+        // One-time migration: convert the old "one entry per character" progress into instances,
+        // so existing players don't lose anything when this update lands.
+        function ensureCardsMigrated() {
+            if (ownedCards.length > 0) return;
+            masterRoster.forEach(base => {
+                const old = characterProgress[base.id];
+                createCardInstance(base.id, 2, old ? old.level : 1, old ? old.xp : 0, old ? old.skillLevel : 1, old ? old.skillXp : 0);
+            });
+        }
+        let characterProgress = {}; // legacy, kept only so old saves can migrate via ensureCardsMigrated()
+
+        // Training materials — earned only from Training Grounds, spent to manually level up a chosen character.
+        let materials = { small: 0, medium: 0, large: 0, skillScroll: 0, soldierCard: 0, pill: 0, scroll: 0, silverToad: 0, goldenToad: 0, diamondToad: 0 };
+        const materialPoints = { small: 500, medium: 2500, large: 10000, skillScroll: 300, soldierCard: 100 }; // large is purchase-only, not obtainable yet
+        const materialSilverCost = { small: 20, medium: 80, large: 250, skillScroll: 100, soldierCard: 5 }; // Silver Coins required per material used (Upgrade Economy: EXP + Silver + Materials, all mandatory)
+        const SOLDIER_CARD_SELL_VALUE = 100; // Silver Coins if sold instead of used as upgrade fodder
+        const toadSellValue = { silverToad: 500, goldenToad: 2500, diamondToad: 10000 }; // diamondToad is purchase-only, not obtainable yet
+        const materialInfo = {
+            small: { name: 'Rice Ball', icon: '🍙' },
+            medium: { name: 'Meat Bowl', icon: '🍲' },
+            large: { name: 'Feast Platter', icon: '🍖' },
+            skillScroll: { name: 'Skill Stone', icon: '💎' },
+            soldierCard: { name: 'Ninja Soldier Card', icon: '🎴' },
+            pill: { name: 'Awakening Pill', icon: '💊' },
+            scroll: { name: 'Evolution Scroll', icon: '📜' },
+            silverToad: { name: 'Silver Toad', icon: '🐸' },
+            goldenToad: { name: 'Golden Toad', icon: '🐸' },
+            diamondToad: { name: 'Diamond Toad', icon: '🐸' }
+        };
+        function materialLabel(type) {
+            return `${materialInfo[type].icon} ${materialInfo[type].name}`;
+        }
+
+        // Boss Fragments — dropped only from true Boss stages (world position 4/7/10). Keyed by characterId.
+        // 10 fragments of a boss redeem into a fresh 4★ card instance of that character.
+        let bossFragments = {};
+        const FRAGMENTS_TO_REDEEM = 10;
+
+        let upgradeTargetId = null;
+        let upgradeQtyInputs = { small: 0, medium: 0, large: 0, soldierCard: 0 };
+        let skillQtyInput = 0;
+
+        function computeUpgradePreview() {
+            const inst = getCardInstance(upgradeTargetId);
+            const base = masterRoster.find(n => n.id === inst.characterId);
+            let totalExp = 0, totalSilverCost = 0;
+            ['small', 'medium', 'large', 'soldierCard'].forEach(type => {
+                const qty = upgradeQtyInputs[type];
+                totalExp += materialPoints[type] * qty;
+                totalSilverCost += materialSilverCost[type] * qty;
+            });
+            let simLevel = inst.level, simXp = inst.xp + totalExp;
+            while (simLevel < MAX_CHAR_LEVEL && simXp >= xpToNextLevel(simLevel)) {
+                simXp -= xpToNextLevel(simLevel);
+                simLevel++;
+            }
+            const newStats = getLeveledStats(base, simLevel);
+            return { totalExp, totalSilverCost, newLevel: simLevel, newHp: newStats.hp, newAtk: newStats.atk };
+        }
+
+        function computeSkillPreview() {
+            const inst = getCardInstance(upgradeTargetId);
+            const totalExp = materialPoints.skillScroll * skillQtyInput;
+            const totalSilverCost = materialSilverCost.skillScroll * skillQtyInput;
+            let simLevel = inst.skillLevel, simXp = inst.skillXp + totalExp;
+            while (simLevel < MAX_SKILL_LEVEL && simXp >= skillXpToNextLevel(simLevel)) {
+                simXp -= skillXpToNextLevel(simLevel);
+                simLevel++;
+            }
+            const mults = getSkillMultipliers(simLevel);
+            return { totalExp, totalSilverCost, newSkillLevel: simLevel, newSpecialMult: mults.special, newRageMult: mults.rage };
+        }
+
+        function adjustSkillQty(delta) {
+            const next = skillQtyInput + delta;
+            if (next < 0 || next > materials.skillScroll) return;
+            skillQtyInput = next;
+            renderSkillSection();
+        }
+
+        function renderSkillSection() {
+            const inst = getCardInstance(upgradeTargetId);
+            document.getElementById('skillLevelInfo').innerText = inst.skillLevel < MAX_SKILL_LEVEL
+                ? `Skill Lv${inst.skillLevel} — XP: ${inst.skillXp}/${skillXpToNextLevel(inst.skillLevel)}`
+                : `Skill Lv${inst.skillLevel} — MAX`;
+
+            document.getElementById('skillMaterialInput').innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; background:rgba(255,255,255,0.05); padding:8px 10px; border-radius:6px;">
+                    <span style="font-size:12px;">${materialLabel('skillScroll')} (have: ${materials.skillScroll})</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <button class="btn" style="padding:3px 10px;" onclick="adjustSkillQty(-1)">−</button>
+                        <span style="min-width:20px; text-align:center; font-family:'Orbitron',sans-serif;">${skillQtyInput}</span>
+                        <button class="btn" style="padding:3px 10px;" onclick="adjustSkillQty(1)">+</button>
+                    </div>
+                </div>`;
+            renderSkillPreview();
+        }
+
+        function renderSkillPreview() {
+            const preview = computeSkillPreview();
+            document.getElementById('skillPreviewBox').innerHTML = `
+                XP gained: <b>${preview.totalExp}</b><br>
+                Silver cost: <b>${preview.totalSilverCost}</b> (you have ${silver})<br>
+                New Skill Level: <b>${preview.newSkillLevel}</b><br>
+                Special x<b>${preview.newSpecialMult.toFixed(1)}</b> · Rage x<b>${preview.newRageMult.toFixed(1)}</b>`;
+            const canAfford = preview.totalExp > 0 && silver >= preview.totalSilverCost;
+            document.getElementById('confirmSkillUpgradeBtn').disabled = !canAfford;
+        }
+
+        function confirmSkillUpgrade() {
+            const preview = computeSkillPreview();
+            if (preview.totalExp <= 0) { alert(`Select at least one ${materialLabel('skillScroll')} first.`); return; }
+            if (silver < preview.totalSilverCost) { alert('Not enough Silver Coins!'); return; }
+
+            materials.skillScroll -= skillQtyInput;
+            silver -= preview.totalSilverCost;
+
+            const inst = getCardInstance(upgradeTargetId);
+            inst.skillXp += preview.totalExp;
+            while (inst.skillLevel < MAX_SKILL_LEVEL && inst.skillXp >= skillXpToNextLevel(inst.skillLevel)) {
+                inst.skillXp -= skillXpToNextLevel(inst.skillLevel);
+                inst.skillLevel++;
+            }
+            if (inst.skillLevel >= MAX_SKILL_LEVEL) inst.skillXp = 0;
+
+            skillQtyInput = 0;
+            updateCurrencyUI();
+            const base = masterRoster.find(n => n.id === inst.characterId);
+            alert(`Skill upgraded! ${base.name}'s Skill is now Level ${inst.skillLevel}.`);
+            renderSkillSection();
+        }
+
+        // Per-stage data: stars earned, best clear time, raid/gold-claim state. Keyed by "mode_stageNum".
+        let stageData = {};
+        function getStageData(mode, stageNum) {
+            const key = `${mode}_${stageNum}`;
+            if (!stageData[key]) {
+                stageData[key] = { stars: 0, cleared: false, bestTimeMs: null, raidsUsedToday: 0, lastRaidDay: null, goldClaimed: false };
+            }
+            return stageData[key];
+        }
+        function todayKey() {
+            const d = new Date();
+            return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+        }
+
+        function grantTrainingRewards(difficulty) {
+            let smallGained = 0, mediumGained = 0, skillScrollGained = 0;
+            if (difficulty === 'easy') {
+                smallGained = 1 + Math.floor(Math.random() * 5); // 1-5
+            } else if (difficulty === 'normal') {
+                const total = 1 + Math.floor(Math.random() * 5); // 1-5 total, split between small/medium
+                smallGained = Math.floor(Math.random() * (total + 1));
+                mediumGained = total - smallGained;
+            } else if (difficulty === 'hard') {
+                mediumGained = 1 + Math.floor(Math.random() * 5); // 1-5
+                skillScrollGained = 1 + Math.floor(Math.random() * 3); // 1-3, Hard only — the "separate material" for Skill Level
+            }
+            materials.small += smallGained;
+            materials.medium += mediumGained;
+            materials.skillScroll += skillScrollGained;
+            saveGame();
+            return { smallGained, mediumGained, skillScrollGained };
+        }
+
+        function grantTreasureRewards(difficulty) {
+            let silverToadGained = 0, goldenToadGained = 0;
+            if (difficulty === 'easy') {
+                silverToadGained = 1 + Math.floor(Math.random() * 5); // 1-5
+            } else if (difficulty === 'normal') {
+                const total = 1 + Math.floor(Math.random() * 5); // 1-5 total, split between silver/golden
+                silverToadGained = Math.floor(Math.random() * (total + 1));
+                goldenToadGained = total - silverToadGained;
+            } else if (difficulty === 'hard') {
+                goldenToadGained = 1 + Math.floor(Math.random() * 5); // 1-5
+            }
+            materials.silverToad += silverToadGained;
+            materials.goldenToad += goldenToadGained;
+            saveGame();
+            return { silverToadGained, goldenToadGained };
+        }
+
+        function shuffleArray(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function generateTrainingEnemies(difficulty, wave) {
+            const slots = [{slot:'C1',col:0,row:0},{slot:'C2',col:1,row:0},{slot:'C3',col:2,row:0},{slot:'C4',col:0,row:1},{slot:'C5',col:1,row:1},{slot:'C6',col:2,row:1}];
+            const diffMult = { easy: 1.0, normal: 1.6, hard: 2.4 }[difficulty];
+            const baseHp = (300 + wave * 60) * diffMult;
+            const baseAtk = (34 + wave * 6) * diffMult;
+            const baseSpeed = 90 + wave * 4;
+            const count = 2 + wave; // wave1:3, wave2:4, wave3:5 enemies
+
+            let eData = [];
+            for (let i = 0; i < count; i++) {
+                const isCaptain = i === count - 1;
+                eData.push({
+                    name: isCaptain ? 'Training Captain' : `Training Dummy ${i + 1}`,
+                    hp: Math.floor(baseHp + Math.random() * 20),
+                    atk: Math.floor(baseAtk + Math.random() * 5),
+                    speed: Math.floor(baseSpeed + Math.random() * 8),
+                    role: 'attacker',
+                    starShine: isCaptain
+                });
+            }
+            const slotIndices = shuffleArray([0,1,2,3,4,5]).slice(0, count);
+            return slots.map((s, idx) => {
+                const dataIdx = slotIndices.indexOf(idx);
+                const m = dataIdx !== -1 ? eData[dataIdx] : null;
+                return m ? { ...s, ...m, maxHp: m.hp, state: { atkCount: m.starShine?1:0, spcCount: 0 }, isDead: false } : null;
+            });
+        }
+
+        function resetDailyRaidIfNeeded(sd) {
+            const today = todayKey();
+            if (sd.lastRaidDay !== today) { sd.lastRaidDay = today; sd.raidsUsedToday = 0; }
+        }
+        function getRaidsRemainingToday(sd) {
+            resetDailyRaidIfNeeded(sd);
+            return Math.max(0, 2 - sd.raidsUsedToday);
+        }
+        function formatTime(ms) {
+            if (ms == null) return '--:--';
+            const totalSec = Math.floor(ms / 1000);
+            const m = Math.floor(totalSec / 60), s = totalSec % 60;
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function stageLabel(stageNum) {
+            const world = Math.ceil(stageNum / 10);
+            const stageInWorld = ((stageNum - 1) % 10) + 1;
+            return `${world}-${stageInWorld}`;
+        }
+
+        /* PORTRAIT CARD HELPERS — no real character art (avoids copyright), so each
+           name gets a consistent color gradient + a role/tier emoji + a small corner badge. */
+        const portraitPalettes = [
+            ['#ff6b6b','#c92a2a'], ['#4dabf7','#1864ab'], ['#69db7c','#2f9e44'],
+            ['#ffa94d','#e8590c'], ['#da77f2','#9c36b5'], ['#63e6be','#0ca678'],
+            ['#ffd43b','#f08c00'], ['#748ffc','#3b5bdb']
+        ];
+        function nameHash(str) {
+            let h = 0;
+            for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+            return h;
+        }
+        function portraitGradient(name) {
+            const [c1, c2] = portraitPalettes[nameHash(name) % portraitPalettes.length];
+            return `linear-gradient(160deg, ${c1}, ${c2})`;
+        }
+        function portraitIcon(entity) {
+            if (entity.starShine) return entity.name.includes('BOSS') ? '🐍' : '👹';
+            if (entity.role === 'healer') return '🩺';
+            return '🥷';
+        }
+        function roleBadgeHtml(role) {
+            return role === 'healer'
+                ? `<div class="portrait-badge" style="background:#2ed573;">✚</div>`
+                : `<div class="portrait-badge" style="background:#ff4757;">⚔</div>`;
+        }
+        function portraitBlock(entity, opts = {}) {
+            const dimStyle = opts.dead ? 'filter:grayscale(100%); opacity:0.5;' : '';
+            const levelBadge = (opts.level != null) ? `<div class="portrait-level-badge">Lv${opts.level}</div>` : '';
+            return `
+                <div class="portrait-art" style="background:${portraitGradient(entity.name)}; ${dimStyle}">
+                    ${levelBadge}
+                    <span class="portrait-emoji">${portraitIcon(entity)}</span>
+                    ${roleBadgeHtml(entity.role)}
+                </div>
+                <div class="portrait-footer">
+                    <div class="portrait-name">${entity.name}${opts.deadLabel ? ' (DEAD)' : ''}</div>
+                    ${opts.statLine ? `<div class="portrait-stats">${opts.statLine}</div>` : ''}
+                    ${opts.hpPercent != null ? `
+                        <div class="portrait-hpbar"><div class="portrait-hpbar-fill" style="width:${opts.hpPercent}%"></div></div>
+                        <div class="portrait-hp-text">${opts.hpText || ''}</div>` : ''}
+                </div>`;
+        }
+
+        function isModeUnlocked(mode) {
+            if (mode === 'easy') return true;
+            if (mode === 'normal') return modeProgress.easy.cleared >= 20;
+            if (mode === 'hard') return modeProgress.normal.cleared >= 20;
+            return false;
+        }
+
+        function renderDifficultyTabs() {
+            const wrap = document.getElementById('difficultyTabs');
+            wrap.innerHTML = '';
+            const modes = [
+                { key: 'easy', label: 'EASY' },
+                { key: 'normal', label: 'NORMAL' },
+                { key: 'hard', label: 'HARD' }
+            ];
+            modes.forEach(m => {
+                const unlocked = isModeUnlocked(m.key);
+                const isActive = currentMode === m.key;
+                wrap.innerHTML += `
+                    <button class="btn ${isActive ? 'btn-active' : ''}" style="flex:1; ${unlocked ? '' : 'opacity:0.35; pointer-events:none;'}" onclick="switchMode('${m.key}')">
+                        ${m.label}${unlocked ? '' : ' 🔒'}
+                    </button>`;
+            });
+        }
+
+        function switchMode(mode) {
+            if (!isModeUnlocked(mode)) return;
+            currentMode = mode;
+            renderStageSelectScreen();
+        }
+
+        function renderStageSelectScreen() {
+            renderDifficultyTabs();
+            document.getElementById('stageSelectModeLabel').innerText = `${currentMode.toUpperCase()} — SELECT STAGE`;
+            const wrap = document.getElementById('stageSelectGrid');
+            wrap.innerHTML = '';
+            const clearedCount = modeProgress[currentMode].cleared;
+            const itemPool = ['Chakra Scroll', 'Shuriken Set', 'Kunai Blade', 'Elemental Orb', 'Ninja Scroll'];
+
+            for (let world = 1; world <= 5; world++) {
+                wrap.innerHTML += `<div class="section-title" style="margin-top:14px;">WORLD ${world}</div>`;
+                for (let s = 1; s <= 10; s++) {
+                    const stageNum = (world - 1) * 10 + s;
+                    const sd = getStageData(currentMode, stageNum);
+                    const isUnlocked = stageNum <= clearedCount + 1;
+                    const isFinalBossStage = stageNum === totalStages;
+                    const tierIcon = stageNum <= 15 ? '🥷' : stageNum <= 30 ? '🥋' : stageNum <= 45 ? '👹' : '🐍';
+                    const itemReward = itemPool[stageNum % itemPool.length];
+                    const starsDisplay = '⭐'.repeat(sd.stars) + '☆'.repeat(3 - sd.stars);
+                    const raidsLeft = getRaidsRemainingToday(sd);
+                    const canRaidNow = sd.stars >= 3 && raidsLeft > 0;
+                    const raidLabel = sd.stars < 3 ? 'RAID 🔒' : `RAID (${raidsLeft}/2)`;
+                    const canClaimGold = sd.stars >= 3 && !sd.goldClaimed;
+
+                    wrap.innerHTML += `
+                        <div class="stage-card-row ${isUnlocked ? '' : 'locked'}">
+                            <div class="stage-card-icon">${tierIcon}${isFinalBossStage ? ' 👑' : ''}</div>
+                            <div class="stage-card-info">
+                                <div class="stage-card-title">Stage ${world}-${s}${isFinalBossStage ? ' (BOSS)' : ''}</div>
+                                <div class="stage-card-sub">⏱ Best: ${formatTime(sd.bestTimeMs)} &nbsp; ${starsDisplay}</div>
+                                <div class="stage-card-sub">🎁 Reward: ${itemReward}</div>
+                            </div>
+                            <div class="stage-card-actions">
+                                <button class="btn ${isUnlocked ? 'btn-active' : ''}" style="${isUnlocked ? '' : 'opacity:0.35; pointer-events:none;'}" onclick="pickStage(${stageNum})">${sd.cleared ? 'Replay' : 'Play'}</button>
+                                <button class="btn ${canRaidNow ? 'btn-active' : ''}" style="${canRaidNow ? '' : 'opacity:0.35; pointer-events:none;'}" onclick="doRaid('${currentMode}', ${stageNum})">${raidLabel}</button>
+                                ${canClaimGold ? `<button class="btn btn-active" onclick="claimStageGold('${currentMode}', ${stageNum})">🪙 Claim Gold</button>` : (sd.goldClaimed ? `<span class="claimed-text">Gold Claimed ✔</span>` : '')}
+                            </div>
+                        </div>`;
+                }
+            }
+        }
+
+        function pickStage(stageNum) {
+            const clearedCount = modeProgress[currentMode].cleared;
+            if (stageNum > clearedCount + 1) return;
+            stageToPlay = stageNum;
+            pendingStartAction = 'story';
+            openScreen('setupScreen');
+        }
+
+        function doRaid(mode, stageNum) {
+            const sd = getStageData(mode, stageNum);
+            if (sd.stars < 3) return;
+            resetDailyRaidIfNeeded(sd);
+
+            if (sd.raidsUsedToday >= 2) { alert('Daily raid limit reached for this stage — come back tomorrow!'); return; }
+            if (energy < raidEnergyCost) { alert('Not enough Energy for a raid!'); return; }
+            energy -= raidEnergyCost;
+            sd.raidsUsedToday++;
+
+            const rewardSilver = 50 + stageNum * 5;
+            silver += rewardSilver;
+            updateCurrencyUI();
+            alert(`Raid complete! +${rewardSilver} Silver`);
+            renderStageSelectScreen();
+        }
+
+        function claimStageGold(mode, stageNum) {
+            const sd = getStageData(mode, stageNum);
+            if (sd.stars < 3 || sd.goldClaimed) return;
+            sd.goldClaimed = true;
+            const goldAmt = 10 + Math.ceil(stageNum / 10) * 5;
+            gold += goldAmt;
+            updateCurrencyUI();
+            alert(`Claimed +${goldAmt} Gold!`);
+            renderStageSelectScreen();
+        }
+
+        function toggleAuto() {
+            autoMode = !autoMode;
+            const b = document.getElementById('btnAuto');
+            b.innerText = autoMode ? 'AUTO: ON' : 'AUTO: OFF';
+            b.classList.toggle('btn-active', autoMode);
+            saveGame();
+        }
+
+        setInterval(() => {
+            if (energy < maxEnergy) { energy++; updateCurrencyUI(); }
+        }, 60000);
+
+        const masterRoster = [
+            { id: 'n1', name: 'Naruto', hp: 550, atk: 60, speed: 100, role: 'attacker', starShine: true },
+            { id: 'n2', name: 'Sasuke', hp: 480, atk: 70, speed: 108, role: 'attacker', starShine: true },
+            { id: 'n3', name: 'Kakashi', hp: 420, atk: 65, speed: 110, role: 'attacker', starShine: false },
+            { id: 'n4', name: 'Sakura', hp: 380, atk: 42, speed: 95, role: 'healer', starShine: false },
+            { id: 'n5', name: 'Shikamaru', hp: 400, atk: 50, speed: 98, role: 'attacker', starShine: false },
+            { id: 'n6', name: 'Gaara', hp: 650, atk: 55, speed: 90, role: 'attacker', starShine: true },
+            { id: 'n7', name: 'Rock Lee', hp: 460, atk: 72, speed: 115, role: 'attacker', starShine: false },
+            { id: 'n8', name: 'Hinata', hp: 410, atk: 48, speed: 102, role: 'attacker', starShine: false },
+            { id: 'n9', name: 'Mira', hp: 390, atk: 40, speed: 100, role: 'healer', starShine: false },
+            { id: 'n10', name: 'Yumi', hp: 410, atk: 44, speed: 104, role: 'healer', starShine: false }
+        ];
+
+        const slotCoords = [{col:0,row:0},{col:1,row:0},{col:2,row:0},{col:0,row:1},{col:1,row:1},{col:2,row:1}];
+        let selectedSquad = [null, null, null, null, null, null];
+        let playerTeam = [], enemyTeam = [];
+        let baseDelay = 1200, speedMultiplier = 1, isPaused = false, battleOver = false;
+
+        /* STARTER STYLE SELECT — first-launch choice, grants one free bonus character */
+        const starterCharacters = [
+            { id: 'starter_atk', name: 'Kael', hp: 420, atk: 68, speed: 105, role: 'attacker', styleLabel: 'Attacking Style', styleIcon: '🗡️' },
+            { id: 'starter_def', name: 'Doran', hp: 620, atk: 38, speed: 88, role: 'attacker', styleLabel: 'Defense Style', styleIcon: '🛡️' },
+            { id: 'starter_heal', name: 'Sana', hp: 400, atk: 40, speed: 100, role: 'healer', styleLabel: 'Medical Style', styleIcon: '💚' }
+        ];
+        let previewStyleIndex = 0;
+        let starterChosen = false;
+        let chosenStarterId = null;
+
+        function renderStarterSelect() {
+            const big = document.getElementById('starterBigDisplay');
+            const list = document.getElementById('starterStyleList');
+            const featured = starterCharacters[previewStyleIndex];
+
+            big.innerHTML = `
+                <div class="ninja-card-item portrait-mode" style="width:100%; height:180px; cursor:default;">
+                    ${portraitBlock(featured, { statLine: `HP:${featured.hp} · ATK:${featured.atk} · SPD:${featured.speed}` })}
+                </div>
+                <div style="text-align:center; margin-top:6px; font-family:'Orbitron',sans-serif; font-size:13px; color:#ff9d00; font-weight:900;">${featured.styleIcon} ${featured.styleLabel.toUpperCase()}</div>`;
+
+            list.innerHTML = '';
+            starterCharacters.forEach((s, idx) => {
+                if (idx === previewStyleIndex) return;
+                list.innerHTML += `
+                    <button class="btn" style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px;" onclick="previewStyleIndex=${idx}; renderStarterSelect();">
+                        <span>${s.styleIcon} ${s.name}</span>
+                        <span style="font-size:10px; color:#9da8c7;">${s.styleLabel}</span>
+                    </button>`;
+            });
+        }
+
+        function confirmStarterChoice() {
+            const chosen = starterCharacters[previewStyleIndex];
+            if (!masterRoster.some(n => n.id === chosen.id)) {
+                masterRoster.push({ id: chosen.id, name: chosen.name, hp: chosen.hp, atk: chosen.atk, speed: chosen.speed, role: chosen.role, starShine: false });
+            }
+            ensureCardsMigrated();
+            if (!ownedCards.some(c => c.characterId === chosen.id)) {
+                createCardInstance(chosen.id, 2);
+            }
+            starterChosen = true;
+            chosenStarterId = chosen.id;
+            saveGame();
+            openScreen('mainMenuScreen');
+        }
+
+        function updateCurrencyUI() {
+            document.getElementById('silverCoins').innerText = silver;
+            document.getElementById('goldCoins').innerText = gold;
+            document.getElementById('energyPoints').innerText = energy;
+            document.getElementById('playerLevelBadge').innerText = `LVL ${playerLevel}`;
+            saveGame();
+        }
+
+        /* SAVE / LOAD — uses localStorage so progress survives closing the browser/app.
+           (This file runs as a standalone page outside claude.ai, so localStorage works normally here.) */
+        const SAVE_KEY = 'ninjaArenaSave';
+
+        function getSaveDataObject() {
+            return {
+                version: 2,
+                silver, gold, energy, playerLevel,
+                currentMode, modeProgress, stageData,
+                ownedCards, nextInstanceId,
+                materials, bossFragments, trainingCleared, trainingLastRaidDay,
+                treasureCleared, treasureLastRaidDay,
+                squadIds: selectedSquad.map(m => m ? m.id : null),
+                starterChosen, chosenStarterId,
+                selectedHelperLeaderId, myDesignatedLeaderId,
+                autoMode
+            };
+        }
+
+        function saveGame() {
+            try {
+                localStorage.setItem(SAVE_KEY, JSON.stringify(getSaveDataObject()));
+            } catch (e) {
+                console.warn('Save failed:', e);
+            }
+        }
+
+        function applySaveData(data) {
+            silver = data.silver ?? silver;
+            gold = data.gold ?? gold;
+            energy = data.energy ?? energy;
+            playerLevel = data.playerLevel ?? playerLevel;
+            currentMode = data.currentMode || currentMode;
+            modeProgress = data.modeProgress || modeProgress;
+            stageData = data.stageData || {};
+            characterProgress = data.characterProgress || {}; // legacy, used only for migration below
+            ownedCards = data.ownedCards || [];
+            nextInstanceId = data.nextInstanceId || 1;
+            materials = data.materials || materials;
+            if (materials.skillScroll === undefined) materials.skillScroll = 0;
+            if (materials.soldierCard === undefined) materials.soldierCard = 0;
+            if (materials.pill === undefined) materials.pill = 0;
+            if (materials.scroll === undefined) materials.scroll = 0;
+            if (materials.silverToad === undefined) materials.silverToad = 0;
+            if (materials.goldenToad === undefined) materials.goldenToad = 0;
+            if (materials.diamondToad === undefined) materials.diamondToad = 0;
+            bossFragments = data.bossFragments || {};
+            trainingCleared = data.trainingCleared || trainingCleared;
+            trainingLastRaidDay = data.trainingLastRaidDay || trainingLastRaidDay;
+            treasureCleared = data.treasureCleared || treasureCleared;
+            treasureLastRaidDay = data.treasureLastRaidDay || treasureLastRaidDay;
+            starterChosen = !!data.starterChosen;
+            chosenStarterId = data.chosenStarterId || null;
+            selectedHelperLeaderId = data.selectedHelperLeaderId || null;
+            myDesignatedLeaderId = data.myDesignatedLeaderId || null;
+            autoMode = !!data.autoMode;
+
+            if (chosenStarterId && !masterRoster.some(n => n.id === chosenStarterId)) {
+                const starter = starterCharacters.find(s => s.id === chosenStarterId);
+                if (starter) masterRoster.push({ id: starter.id, name: starter.name, hp: starter.hp, atk: starter.atk, speed: starter.speed, role: starter.role, starShine: false });
+            }
+            ensureCardsMigrated(); // creates instances from legacy characterProgress if this is an old save
+            if (chosenStarterId && !ownedCards.some(c => c.characterId === chosenStarterId)) {
+                createCardInstance(chosenStarterId, 2);
+            }
+
+            if (Array.isArray(data.squadIds)) {
+                selectedSquad = data.squadIds.map((instanceId, idx) => {
+                    if (!instanceId) return null;
+                    const inst = getCardInstance(instanceId);
+                    if (!inst) return null;
+                    const leveled = getInstanceDisplay(inst);
+                    return { ...leveled, slot: `P${idx+1}`, maxHp: leveled.hp, hp: leveled.hp, state: { atkCount: leveled.starShine?1:0, spcCount: 0 }, isDead: false, col: slotCoords[idx].col, row: slotCoords[idx].row };
+                });
+            }
+        }
+
+        function loadGame() {
+            try {
+                const raw = localStorage.getItem(SAVE_KEY);
+                if (!raw) return false;
+                applySaveData(JSON.parse(raw));
+                return true;
+            } catch (e) {
+                console.warn('Load failed:', e);
+                return false;
+            }
+        }
+
+        function resetProgress() {
+            if (!confirm('This will permanently erase all saved progress. Are you sure?')) return;
+            localStorage.removeItem(SAVE_KEY);
+            location.reload();
+        }
+
+        function copyExportBox() {
+            const box = document.getElementById('exportBox');
+            box.select();
+            box.setSelectionRange(0, 999999);
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(box.value);
+                } else {
+                    document.execCommand('copy');
+                }
+                alert('Copied! Now paste it somewhere safe (a note, WhatsApp to yourself, email, etc.) before resetting your device.');
+            } catch (e) {
+                alert('Could not auto-copy. The text is selected — long-press and choose Copy manually.');
+            }
+        }
+
+        function importSaveFromBox() {
+            const raw = document.getElementById('importBox').value.trim();
+            if (!raw) { alert('Paste your backup text into the box first.'); return; }
+            try {
+                const data = JSON.parse(raw);
+                applySaveData(data);
+                saveGame();
+                alert('Progress restored! Returning to the main menu.');
+                openScreen('mainMenuScreen');
+            } catch (e) {
+                alert('That text doesn\'t look like a valid backup — please check you copied the whole thing.');
+            }
+        }
+
+        function openScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            const targetScreen = document.getElementById(screenId);
+            if(targetScreen) {
+                targetScreen.classList.remove('hidden');
+                if(screenId === 'setupScreen') {
+                    renderFormationGrid();
+                }
+                if(screenId === 'stageSelectScreen') {
+                    renderStageSelectScreen();
+                }
+                if(screenId === 'trainingGroundSelectScreen') {
+                    renderGroundSelectScreen();
+                }
+                if(screenId === 'trainingGroundsScreen') {
+                    renderTrainingGroundsScreen();
+                }
+                if(screenId === 'inventoryScreen') {
+                    renderInventoryScreen();
+                }
+                if(screenId === 'upgradeScreen') {
+                    renderUpgradeScreen();
+                }
+                if(screenId === 'upgradeDetailScreen') {
+                    renderUpgradeDetailCard();
+                    renderUpgradeMaterialInputs();
+                    renderUpgradePreview();
+                    renderSkillSection();
+                }
+                if(screenId === 'backupScreen') {
+                    document.getElementById('exportBox').value = JSON.stringify(getSaveDataObject());
+                }
+                if(screenId === 'mainMenuScreen') {
+                    renderMenuSquadEditor();
+                }
+                if(screenId === 'characterPickerScreen') {
+                    renderCharacterPicker();
+                }
+                if(screenId === 'helperLeaderScreen') {
+                    renderHelperLeaderScreen();
+                }
+            }
+        }
+
+        function goBackFromSetup() {
+            openScreen(pendingStartAction === 'training' ? 'trainingGroundsScreen' : 'stageSelectScreen');
+        }
+
+        function handleStartBattleClick() {
+            if (pendingStartAction === 'training') startTrainingStage(trainingDifficultyPlaying);
+            else startStage();
+        }
+
+        /* TRAINING GROUNDS SCREEN */
+        function renderTrainingGroundsScreen() {
+            const wrap = document.getElementById('trainingGrid');
+            wrap.innerHTML = '';
+            const sched = trainingGroundSchedule[currentTrainingGround];
+            const groundOk = isGroundUnlockedToday(currentTrainingGround);
+            document.getElementById('trainingGroundTitle').innerText = sched.label.toUpperCase();
+
+            if (!groundOk) {
+                wrap.innerHTML = `<div style="text-align:center; padding:24px 10px; color:#ff9d00; font-size:13px; background:rgba(255,255,255,0.04); border-radius:10px;">🔒 ${sched.label} is locked today.<br>Opens on: ${sched.dayNames}</div>`;
+                return;
+            }
+
+            const clearedState = getTrainingClearedState();
+            const raidDayState = getTrainingRaidDayState();
+            const order = ['easy', 'normal', 'hard'];
+            const rewardText = currentTrainingGround === 'treasure'
+                ? { easy: `Reward: ${materialLabel('silverToad')}`, normal: `Reward: ${materialLabel('silverToad')} + ${materialLabel('goldenToad')}`, hard: `Reward: ${materialLabel('goldenToad')}` }
+                : { easy: `Reward: ${materialLabel('small')}`, normal: `Reward: ${materialLabel('small')} + ${materialLabel('medium')}`, hard: `Reward: ${materialLabel('medium')}` };
+
+            order.forEach((diff, idx) => {
+                const unlocked = idx === 0 || clearedState[order[idx - 1]];
+                const cleared = clearedState[diff];
+                const raidedToday = raidDayState[diff] === todayKey();
+                const canRaidNow = cleared && !raidedToday;
+                const icon = diff === 'easy' ? '🥋' : diff === 'normal' ? '⚔️' : '🔥';
+
+                let actionHtml;
+                if (!cleared) {
+                    actionHtml = `<button class="btn ${unlocked ? 'btn-active' : ''}" style="${unlocked ? '' : 'opacity:0.35; pointer-events:none;'}" onclick="pickTrainingStage('${diff}')">Fight</button>`;
+                } else {
+                    const label = raidedToday ? 'Raided Today' : `Raid (⚡${trainingRaidEnergyCost})`;
+                    actionHtml = `<button class="btn ${canRaidNow ? 'btn-active' : ''}" style="${canRaidNow ? '' : 'opacity:0.35; pointer-events:none;'}" onclick="doTrainingRaid('${diff}')">${label}</button>`;
+                }
+
+                wrap.innerHTML += `
+                    <div class="stage-card-row ${unlocked ? '' : 'locked'}">
+                        <div class="stage-card-icon">${icon}</div>
+                        <div class="stage-card-info">
+                            <div class="stage-card-title">${diff.toUpperCase()} TRAINING</div>
+                            <div class="stage-card-sub">${cleared ? '✔ Cleared' : (unlocked ? 'Not cleared yet' : '🔒 Clear previous difficulty first')}</div>
+                            <div class="stage-card-sub">🎁 ${rewardText[diff]}</div>
+                        </div>
+                        <div class="stage-card-actions">${actionHtml}</div>
+                    </div>`;
+            });
+        }
+
+        function renderGroundSelectScreen() {
+            const wrap = document.getElementById('groundSelectList');
+            wrap.innerHTML = '';
+            const dayInitials = ['S','M','T','W','T','F','S'];
+            const today = new Date().getDay();
+            ['materials', 'treasure'].forEach(key => {
+                const sched = trainingGroundSchedule[key];
+                const openToday = isGroundUnlockedToday(key);
+                const weekDots = dayInitials.map((d, i) => {
+                    const isOpenDay = sched.days.includes(i);
+                    const isToday = i === today;
+                    return `<span style="display:inline-block; width:24px; text-align:center; font-size:9px; padding:3px 0; margin-right:2px; border-radius:4px; ${isOpenDay ? 'background:#2ed573; color:#000; font-weight:900;' : 'background:rgba(255,255,255,0.05); color:#5b6282;'} ${isToday ? 'box-shadow:0 0 0 1px #00f2fe;' : ''}">${d}</span>`;
+                }).join('');
+                wrap.innerHTML += `
+                    <div class="stage-card-row" onclick="enterTrainingGround('${key}')" style="cursor:pointer;">
+                        <div class="stage-card-icon">${key === 'treasure' ? '💰' : '🍙'}</div>
+                        <div class="stage-card-info">
+                            <div class="stage-card-title">${sched.label}</div>
+                            <div class="stage-card-sub" style="color:${openToday ? '#2ed573' : '#ff9d00'};">${openToday ? '✔ OPEN TODAY' : `🔒 Locked — Opens ${sched.dayNames}`}</div>
+                            <div style="margin-top:4px;">${weekDots}</div>
+                        </div>
+                    </div>`;
+            });
+            wrap.innerHTML += `<div style="font-size:10px; color:#9da8c7; margin-top:6px; text-align:center;">Sunday: both grounds are open!</div>`;
+        }
+
+        function enterTrainingGround(key) {
+            currentTrainingGround = key;
+            openScreen('trainingGroundsScreen');
+        }
+
+        function pickTrainingStage(diff) {
+            if (!isGroundUnlockedToday(currentTrainingGround)) return;
+            const order = ['easy', 'normal', 'hard'];
+            const idx = order.indexOf(diff);
+            const clearedState = getTrainingClearedState();
+            const unlocked = idx === 0 || clearedState[order[idx - 1]];
+            if (!unlocked || clearedState[diff]) return;
+            trainingDifficultyPlaying = diff;
+            pendingStartAction = 'training';
+            openScreen('setupScreen');
+        }
+
+        function buildPlayerTeamFromSquad() {
+            const team = slotCoords.map((c, i) => selectedSquad[i] ? { ...selectedSquad[i] } : null);
+            const helper = helperLeaderPool.find(h => h.id === selectedHelperLeaderId);
+            if (helper) {
+                team[LEADER_SLOT_INDEX] = {
+                    ...helper, slot: `P${LEADER_SLOT_INDEX+1}`, maxHp: helper.hp, hp: helper.hp,
+                    state: { atkCount: 0, spcCount: 0 }, isDead: false,
+                    col: slotCoords[LEADER_SLOT_INDEX].col, row: slotCoords[LEADER_SLOT_INDEX].row
+                };
+            }
+            return team;
+        }
+
+        function startTrainingStage(difficulty) {
+            battleMode = 'training';
+            trainingDifficultyPlaying = difficulty;
+            trainingWaveInStage = 1;
+            playerTeam = buildPlayerTeamFromSquad();
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('battleScreen').classList.remove('hidden');
+            const autoBtn = document.getElementById('btnAuto');
+            autoBtn.innerText = autoMode ? 'AUTO: ON' : 'AUTO: OFF';
+            autoBtn.classList.toggle('btn-active', autoMode);
+            document.getElementById('speedToggleBtn').innerText = `SPD: x${speedMultiplier}`;
+            loadTrainingWave();
+        }
+
+        function loadTrainingWave() {
+            const groundLabel = currentTrainingGround === 'treasure' ? 'TREASURE' : 'TRAINING';
+            document.getElementById('waveBadge').innerText = `${groundLabel} ${trainingDifficultyPlaying.toUpperCase()} · Wave ${trainingWaveInStage}/3`;
+            enemyTeam = generateTrainingEnemies(trainingDifficultyPlaying, trainingWaveInStage);
+            battleOver = false;
+            document.getElementById('logs').innerHTML = '';
+            renderGrids();
+            startBattleLoop();
+        }
+
+        function handleTrainingWaveClear() {
+            battleOver = true;
+            if (trainingWaveInStage < 3) {
+                trainingWaveInStage++;
+                if (autoMode) {
+                    addLog(`[AUTO] Advancing to next training wave...`, 'system');
+                    setTimeout(() => loadTrainingWave(), 900);
+                } else {
+                    setTimeout(() => openTrainingIntermission(), 1200);
+                }
+            } else {
+                const clearedState = getTrainingClearedState();
+                clearedState[trainingDifficultyPlaying] = true;
+                const sched = trainingGroundSchedule[currentTrainingGround];
+                let msg;
+                if (currentTrainingGround === 'treasure') {
+                    const rewards = grantTreasureRewards(trainingDifficultyPlaying);
+                    msg = `Training cleared! +${rewards.silverToadGained} ${materialLabel('silverToad')}, +${rewards.goldenToadGained} ${materialLabel('goldenToad')}.\n\nYou can now raid this difficulty on ${sched.dayNames}.`;
+                } else {
+                    const rewards = grantTrainingRewards(trainingDifficultyPlaying);
+                    msg = `Training cleared! +${rewards.smallGained} ${materialLabel('small')}, +${rewards.mediumGained} ${materialLabel('medium')}${rewards.skillScrollGained ? `, +${rewards.skillScrollGained} ${materialLabel('skillScroll')}` : ''}.\n\nYou can now raid this difficulty on ${sched.dayNames}.`;
+                }
+                selectedHelperLeaderId = null; // must pick a Helper Leader again next time
+                saveGame();
+                setTimeout(() => {
+                    alert(msg);
+                    battleMode = 'story';
+                    openScreen('trainingGroundsScreen');
+                }, 1200);
+            }
+        }
+
+        function openTrainingIntermission() {
+            selectedIntermissionSlot = null;
+            document.getElementById('battleScreen').classList.add('hidden');
+            document.getElementById('intermissionScreen').classList.remove('hidden');
+            document.getElementById('intermissionTitle').innerText = `TRAINING WAVE ${trainingWaveInStage - 1} CLEARED!`;
+            renderIntermissionSquad();
+        }
+
+        function doTrainingRaid(difficulty) {
+            const clearedState = getTrainingClearedState();
+            if (!clearedState[difficulty]) return;
+            if (!isGroundUnlockedToday(currentTrainingGround)) { alert(`${trainingGroundSchedule[currentTrainingGround].label} is locked today!`); return; }
+            const raidDayState = getTrainingRaidDayState();
+            const today = todayKey();
+            if (raidDayState[difficulty] === today) { alert('Already raided this today — come back tomorrow!'); return; }
+            if (energy < trainingRaidEnergyCost) { alert('Not enough Energy for a raid!'); return; }
+            energy -= trainingRaidEnergyCost;
+            raidDayState[difficulty] = today;
+            let msg;
+            if (currentTrainingGround === 'treasure') {
+                const rewards = grantTreasureRewards(difficulty);
+                msg = `Raid complete! +${rewards.silverToadGained} ${materialLabel('silverToad')}, +${rewards.goldenToadGained} ${materialLabel('goldenToad')}.`;
+            } else {
+                const rewards = grantTrainingRewards(difficulty);
+                msg = `Raid complete! +${rewards.smallGained} ${materialLabel('small')}, +${rewards.mediumGained} ${materialLabel('medium')}${rewards.skillScrollGained ? `, +${rewards.skillScrollGained} ${materialLabel('skillScroll')}` : ''}.`;
+            }
+            updateCurrencyUI();
+            alert(msg);
+            renderTrainingGroundsScreen();
+        }
+
+        /* UPGRADE SCREEN */
+        let inventorySortMode = 'star';
+
+        function setInventorySort(mode) {
+            inventorySortMode = mode;
+            renderInventoryScreen();
+        }
+
+        function sellAllSoldierCards() {
+            if (materials.soldierCard <= 0) return;
+            const total = materials.soldierCard * SOLDIER_CARD_SELL_VALUE;
+            silver += total;
+            materials.soldierCard = 0;
+            updateCurrencyUI();
+            alert(`Sold for +${total} Silver!`);
+            renderInventoryScreen();
+        }
+
+        function redeemBossFragments(bossId) {
+            const qty = bossFragments[bossId] || 0;
+            if (qty < FRAGMENTS_TO_REDEEM) return;
+            bossFragments[bossId] = qty - FRAGMENTS_TO_REDEEM;
+            createCardInstance(bossId, 4);
+            saveGame();
+            const bossBase = masterRoster.find(n => n.id === bossId);
+            alert(`Redeemed! You received a new 4★ ${bossBase ? bossBase.name : ''} card.`);
+            renderInventoryScreen();
+        }
+
+        function renderInventoryScreen() {
+            ensureCardsMigrated();
+            document.getElementById('inventorySummaryLine').innerText = `Cards Owned: ${ownedCards.length} · Materials: ${materialLabel('small')} x${materials.small} · ${materialLabel('medium')} x${materials.medium} · ${materialLabel('large')} x${materials.large} · ${materialLabel('skillScroll')} x${materials.skillScroll}`;
+
+            const actionsPanel = document.getElementById('inventoryActionsPanel');
+            let actionsHtml = '';
+            if (materials.soldierCard > 0) {
+                actionsHtml += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; background:rgba(255,255,255,0.05); padding:8px 10px; border-radius:6px;">
+                        <span style="font-size:12px;">${materialLabel('soldierCard')} x${materials.soldierCard} (use in Upgrade, or sell for ${SOLDIER_CARD_SELL_VALUE} Silver each)</span>
+                        <button class="btn btn-active" onclick="sellAllSoldierCards()">Sell All</button>
+                    </div>`;
+            }
+            Object.keys(bossFragments).forEach(bossId => {
+                const qty = bossFragments[bossId];
+                if (qty <= 0) return;
+                const bossBase = masterRoster.find(n => n.id === bossId);
+                const canRedeem = qty >= FRAGMENTS_TO_REDEEM;
+                actionsHtml += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; background:rgba(255,255,255,0.05); padding:8px 10px; border-radius:6px;">
+                        <span style="font-size:12px;">🧩 ${bossBase ? bossBase.name : bossId} Fragments: ${qty}/${FRAGMENTS_TO_REDEEM}</span>
+                        <button class="btn ${canRedeem ? 'btn-active' : ''}" style="${canRedeem ? '' : 'opacity:0.35; pointer-events:none;'}" onclick="redeemBossFragments('${bossId}')">Redeem 4★</button>
+                    </div>`;
+            });
+            if (materials.pill > 0 || materials.scroll > 0) {
+                actionsHtml += `<div style="font-size:11px; color:#9da8c7; margin-bottom:8px;">${materialLabel('pill')} x${materials.pill} · ${materialLabel('scroll')} x${materials.scroll} (used for star evolution — coming soon)</div>`;
+            }
+            actionsPanel.innerHTML = actionsHtml;
+
+            const sortWrap = document.getElementById('inventorySortRow');
+            sortWrap.innerHTML = '';
+            [['star','Star'],['level','Level'],['name','Name']].forEach(([key,label]) => {
+                sortWrap.innerHTML += `<button class="btn ${inventorySortMode===key?'btn-active':''}" style="flex:1;" onclick="setInventorySort('${key}')">${label}</button>`;
+            });
+
+            const sorted = [...ownedCards].sort((a,b) => {
+                if (inventorySortMode === 'level') return b.level - a.level || b.star - a.star;
+                if (inventorySortMode === 'name') {
+                    const an = masterRoster.find(n=>n.id===a.characterId).name;
+                    const bn = masterRoster.find(n=>n.id===b.characterId).name;
+                    return an.localeCompare(bn);
+                }
+                return b.star - a.star || b.level - a.level; // default: star
+            });
+
+            const wrap = document.getElementById('inventoryGrid');
+            wrap.className = 'roster-grid';
+            wrap.style.maxHeight = 'none';
+            wrap.innerHTML = '';
+            sorted.forEach(inst => {
+                const leveled = getInstanceDisplay(inst);
+                const isLeader = myDesignatedLeaderId === inst.instanceId;
+                const inSquad = selectedSquad.some(m => m && m.id === inst.instanceId);
+                const tag = isLeader ? ' · ★Leader' : (inSquad ? ' · ✔Squad' : '');
+                wrap.innerHTML += `
+                    <div class="ninja-card-item portrait-mode" style="cursor:default;">
+                        ${portraitBlock(leveled, { level: inst.level, statLine: `${inst.star}★ · HP:${leveled.hp}·ATK:${leveled.atk}${tag}` })}
+                    </div>`;
+            });
+        }
+
+        function renderUpgradeScreen() {
+            ensureCardsMigrated();
+            document.getElementById('materialInventoryLine').innerText = `Materials: ${materialLabel('small')} x${materials.small} · ${materialLabel('medium')} x${materials.medium} · ${materialLabel('large')} x${materials.large} · ${materialLabel('skillScroll')} x${materials.skillScroll}`;
+            const wrap = document.getElementById('upgradeRosterGrid');
+            wrap.innerHTML = '';
+            ownedCards.forEach(inst => {
+                const leveled = getInstanceDisplay(inst);
+                const lvlText = inst.level < MAX_CHAR_LEVEL ? `XP: ${inst.xp}/${xpToNextLevel(inst.level)}` : 'MAX LVL';
+                const statLine = `${inst.star}★ · ${lvlText} · Skill Lv${inst.skillLevel}`;
+                const isMyLeader = myDesignatedLeaderId === inst.instanceId;
+                wrap.innerHTML += `
+                    <div style="position:relative;">
+                        <div class="ninja-card-item portrait-mode" style="cursor:pointer;" onclick="openUpgradeDetail('${inst.instanceId}')">
+                            ${portraitBlock(leveled, { level: inst.level, statLine })}
+                        </div>
+                        <button onclick="event.stopPropagation(); setMyLeader('${inst.instanceId}')" style="position:absolute; top:3px; right:3px; z-index:5; font-size:8px; padding:2px 5px; ${isMyLeader ? 'background:#00f2fe; color:#000;' : ''}">${isMyLeader ? '★ Leader' : '☆ Set Leader'}</button>
+                    </div>`;
+            });
+        }
+
+        function setMyLeader(instanceId) {
+            myDesignatedLeaderId = (myDesignatedLeaderId === instanceId) ? null : instanceId;
+            saveGame();
+            renderUpgradeScreen();
+        }
+
+        function openUpgradeDetail(instanceId) {
+            upgradeTargetId = instanceId;
+            upgradeQtyInputs = { small: 0, medium: 0, large: 0, soldierCard: 0 };
+            skillQtyInput = 0;
+            openScreen('upgradeDetailScreen');
+        }
+
+        function renderUpgradeDetailCard() {
+            const inst = getCardInstance(upgradeTargetId);
+            const leveled = getInstanceDisplay(inst);
+            document.getElementById('upgradeDetailCard').innerHTML = `
+                <div class="ninja-card-item portrait-mode" style="cursor:default;">
+                    ${portraitBlock(leveled, { level: inst.level, statLine: `${inst.star}★ · XP: ${inst.xp}/${xpToNextLevel(inst.level)}` })}
+                </div>`;
+        }
+
+        function renderUpgradeMaterialInputs() {
+            const wrap = document.getElementById('upgradeMaterialInputs');
+            wrap.innerHTML = '';
+            ['small', 'medium', 'large', 'soldierCard'].forEach(type => {
+                const label = materialLabel(type);
+                wrap.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; background:rgba(255,255,255,0.05); padding:8px 10px; border-radius:6px;">
+                        <span style="font-size:12px;">${label} (have: ${materials[type]})</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <button class="btn" style="padding:3px 10px;" onclick="adjustUpgradeQty('${type}', -1)">−</button>
+                            <span style="min-width:20px; text-align:center; font-family:'Orbitron',sans-serif;">${upgradeQtyInputs[type]}</span>
+                            <button class="btn" style="padding:3px 10px;" onclick="adjustUpgradeQty('${type}', 1)">+</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function adjustUpgradeQty(type, delta) {
+            const next = upgradeQtyInputs[type] + delta;
+            if (next < 0 || next > materials[type]) return;
+            upgradeQtyInputs[type] = next;
+            renderUpgradeMaterialInputs();
+            renderUpgradePreview();
+        }
+
+        function renderUpgradePreview() {
+            const preview = computeUpgradePreview();
+            document.getElementById('upgradePreviewBox').innerHTML = `
+                EXP gained: <b>${preview.totalExp}</b><br>
+                Silver cost: <b>${preview.totalSilverCost}</b> (you have ${silver})<br>
+                New Level: <b>${preview.newLevel}</b><br>
+                New HP: <b>${preview.newHp}</b> · New ATK: <b>${preview.newAtk}</b>`;
+            const canAfford = preview.totalExp > 0 && silver >= preview.totalSilverCost;
+            const btn = document.getElementById('confirmUpgradeBtn');
+            btn.disabled = !canAfford;
+        }
+
+        function confirmUpgrade() {
+            const preview = computeUpgradePreview();
+            if (preview.totalExp <= 0) { alert('Select at least one material first.'); return; }
+            if (silver < preview.totalSilverCost) { alert('Not enough Silver Coins!'); return; }
+
+            ['small', 'medium', 'large', 'soldierCard'].forEach(type => { materials[type] -= upgradeQtyInputs[type]; });
+            silver -= preview.totalSilverCost;
+
+            const inst = getCardInstance(upgradeTargetId);
+            inst.xp += preview.totalExp;
+            while (inst.level < MAX_CHAR_LEVEL && inst.xp >= xpToNextLevel(inst.level)) {
+                inst.xp -= xpToNextLevel(inst.level);
+                inst.level++;
+            }
+            if (inst.level >= MAX_CHAR_LEVEL) inst.xp = 0;
+
+            updateCurrencyUI();
+            const base = masterRoster.find(n => n.id === inst.characterId);
+            alert(`Upgraded! ${base.name} is now Level ${inst.level}.`);
+            openScreen('upgradeScreen');
+        }
+
+        // Refreshes every squad member's stats to their CURRENT level (levels can change between visits).
+        function refreshSquadLevels() {
+            selectedSquad.forEach(m => {
+                if (!m) return;
+                const inst = getCardInstance(m.id);
+                if (!inst) return;
+                const leveled = getInstanceDisplay(inst);
+                m.hp = leveled.hp; m.maxHp = leveled.hp; m.atk = leveled.atk; m.speed = leveled.speed; m.level = leveled.level; m.skillLevel = leveled.skillLevel; m.star = leveled.star;
+            });
+        }
+
+        // Re-renders both the Main Menu squad editor and the per-stage formation grid,
+        // since only one is visible at a time but both stay live in the DOM.
+        function refreshSquadDisplays() {
+            renderMenuSquadEditor();
+            renderFormationGrid();
+        }
+
+        /* MAIN MENU — full squad editor: choose which characters are in the team, from owned card instances */
+        function renderMenuSquadEditor() {
+            const squadContainer = document.getElementById('squadGrid');
+            if (!squadContainer) return;
+            updateCurrencyUI();
+            ensureCardsMigrated();
+            refreshSquadLevels();
+
+            squadContainer.innerHTML = '';
+            selectedSquad.forEach((member, i) => {
+                if (i === LEADER_SLOT_INDEX) return; // Leader slot is chosen per-battle, not from Main Menu
+                if (member) {
+                    const isSwapSelected = selectedSquadSlotForSwap === i;
+                    squadContainer.innerHTML += `
+                        <div class="squad-slot" style="height:128px;" onclick="handleSquadSlotClick(${i})" ondragover="allowDrop(event)" ondragleave="removeDropStyle(event)" ondrop="dropToSquad(event, ${i})" data-slot="${i}">
+                            <span class="slot-label">P${i+1}</span>
+                            <div class="ninja-card-item portrait-mode selected-glow ${isSwapSelected ? 'tap-active' : ''}" ondblclick="removeFromSquad(${i})">
+                                ${portraitBlock(member, { level: member.level, statLine: `${member.star}★ · ATK:${member.atk}` })}
+                            </div>
+                        </div>`;
+                } else {
+                    squadContainer.innerHTML += `
+                        <div class="squad-slot" style="height:128px;" ondragover="allowDrop(event)" ondragleave="removeDropStyle(event)" ondrop="dropToSquad(event, ${i})" data-slot="${i}">
+                            <span class="slot-label">P${i+1}</span>
+                            <div class="squad-slot-plus" onclick="openCharacterPicker()">+</div>
+                        </div>`;
+                }
+            });
+        }
+
+        /* CHARACTER PICKER — opened by tapping an empty team slot (fills only the 5 own-character slots).
+           Lists owned card INSTANCES, so duplicates of the same character show as separate entries. */
+        let pickerSelectedIds = [];
+
+        function openCharacterPicker() {
+            pickerSelectedIds = [];
+            openScreen('characterPickerScreen');
+        }
+
+        function getEmptySlotCount() {
+            return selectedSquad.filter((m, i) => m === null && i !== LEADER_SLOT_INDEX).length;
+        }
+
+        function renderCharacterPicker() {
+            ensureCardsMigrated();
+            const maxPick = getEmptySlotCount();
+            document.getElementById('pickerCountLabel').innerText = `${pickerSelectedIds.length}/${maxPick}`;
+
+            const wrap = document.getElementById('pickerList');
+            wrap.innerHTML = '';
+            ownedCards.forEach(inst => {
+                const ninja = getInstanceDisplay(inst);
+                const usedElsewhere = selectedSquad.some(m => m && m.id === ninja.id);
+                const isTicked = pickerSelectedIds.includes(ninja.id);
+                const isLocked = usedElsewhere || (!isTicked && pickerSelectedIds.length >= maxPick);
+                wrap.innerHTML += `
+                    <div class="stage-card-row ${isLocked ? 'locked' : ''}" onclick="${isLocked ? '' : `togglePickerSelect('${ninja.id}')`}">
+                        <div class="stage-card-icon">${portraitIcon(ninja)}</div>
+                        <div class="stage-card-info">
+                            <div class="stage-card-title">${ninja.name}${ninja.role === 'healer' ? ' ✚' : ''}</div>
+                            <div class="stage-card-sub">${ninja.star}★ · Lv${ninja.level} · HP:${ninja.hp} · ATK:${ninja.atk} · SPD:${ninja.speed}</div>
+                            ${usedElsewhere ? '<div class="stage-card-sub" style="color:#ff6b6b;">Already in squad</div>' : ''}
+                        </div>
+                        <div class="stage-card-actions">
+                            <div class="picker-tick ${isTicked ? 'ticked' : ''}">${isTicked ? '✓' : ''}</div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function togglePickerSelect(id) {
+            const idx = pickerSelectedIds.indexOf(id);
+            if (idx >= 0) {
+                pickerSelectedIds.splice(idx, 1);
+            } else if (pickerSelectedIds.length < getEmptySlotCount()) {
+                pickerSelectedIds.push(id);
+            }
+            renderCharacterPicker();
+        }
+
+        function confirmCharacterPick() {
+            if (pickerSelectedIds.length === 0) { alert('Tick at least one character first!'); return; }
+            let queue = [...pickerSelectedIds];
+            selectedSquad = selectedSquad.map((m, idx) => {
+                if (m || idx === LEADER_SLOT_INDEX || queue.length === 0) return m;
+                const instanceId = queue.shift();
+                const inst = getCardInstance(instanceId);
+                const leveled = getInstanceDisplay(inst);
+                return { ...leveled, maxHp: leveled.hp, hp: leveled.hp, state: { atkCount: leveled.starShine?1:0, spcCount: 0 }, isDead: false };
+            });
+            selectedSquad.forEach((m, idx) => { if (m) { m.slot = `P${idx+1}`; m.col = slotCoords[idx].col; m.row = slotCoords[idx].row; } });
+            saveGame();
+            openScreen('mainMenuScreen');
+        }
+
+        function closeCharacterPicker() {
+            openScreen('mainMenuScreen');
+        }
+
+        function renderHelperLeaderScreen() {
+            const wrap = document.getElementById('helperLeaderList');
+            wrap.innerHTML = '';
+            helperLeaderPool.forEach(h => {
+                const isChosen = selectedHelperLeaderId === h.id;
+                wrap.innerHTML += `
+                    <div class="stage-card-row" onclick="pickHelperLeader('${h.id}')" style="${isChosen ? 'border-color:#00f2fe;' : ''}">
+                        <div class="stage-card-icon">${portraitIcon(h)}</div>
+                        <div class="stage-card-info">
+                            <div class="stage-card-title">${h.name}${h.role === 'healer' ? ' ✚' : ''}</div>
+                            <div class="stage-card-sub">Player: ${h.playerName} · Lv${h.displayLevel}</div>
+                            <div class="stage-card-sub">HP:${h.hp} · ATK:${h.atk} · SPD:${h.speed}</div>
+                        </div>
+                        <div class="stage-card-actions">
+                            <div class="picker-tick ${isChosen ? 'ticked' : ''}">${isChosen ? '✓' : ''}</div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function pickHelperLeader(id) {
+            selectedHelperLeaderId = id;
+            saveGame();
+            openScreen('setupScreen');
+        }
+
+        /* SETUP SCREEN (per-stage) — formation/reposition only, no roster here */
+        function renderFormationGrid() {
+            const formationContainer = document.getElementById('formationGrid');
+            if (!formationContainer) return;
+            refreshSquadLevels();
+
+            formationContainer.innerHTML = '';
+            selectedSquad.forEach((member, i) => {
+                if (i === LEADER_SLOT_INDEX) return; // rendered separately below
+                if (member) {
+                    const isSwapSelected = selectedSquadSlotForSwap === i;
+                    formationContainer.innerHTML += `
+                        <div class="squad-slot" style="height:128px;" onclick="handleSquadSlotClick(${i})" ondragover="allowDrop(event)" ondragleave="removeDropStyle(event)" ondrop="dropToSquad(event, ${i})" data-slot="${i}">
+                            <span class="slot-label">P${i+1}</span>
+                            <div class="ninja-card-item portrait-mode selected-glow ${isSwapSelected ? 'tap-active' : ''}">
+                                ${portraitBlock(member, { level: member.level, statLine: `HP:${member.hp} · ATK:${member.atk} · SPD:${member.speed}` })}
+                            </div>
+                        </div>`;
+                } else {
+                    formationContainer.innerHTML += `
+                        <div class="squad-slot" style="height:128px;" onclick="handleSquadSlotClick(${i})" ondragover="allowDrop(event)" ondragleave="removeDropStyle(event)" ondrop="dropToSquad(event, ${i})" data-slot="${i}">
+                            <span class="slot-label">P${i+1}</span>
+                            <span class="empty-slot-text">Empty Slot (set from Main Menu)</span>
+                        </div>`;
+                }
+            });
+
+            // Leader slot (P6) — borrowed helper, chosen fresh via the Helper Leader screen
+            const helper = helperLeaderPool.find(h => h.id === selectedHelperLeaderId);
+            if (helper) {
+                formationContainer.innerHTML += `
+                    <div class="squad-slot" style="height:128px; border-color:#00f2fe;" onclick="openScreen('helperLeaderScreen')">
+                        <span class="slot-label">P6 · LEADER</span>
+                        <div class="ninja-card-item portrait-mode selected-glow" style="cursor:pointer;">
+                            ${portraitBlock(helper, { level: helper.displayLevel, statLine: `${helper.playerName}` })}
+                        </div>
+                    </div>`;
+            } else {
+                formationContainer.innerHTML += `
+                    <div class="squad-slot" style="height:128px; border-color:#00f2fe;" onclick="openScreen('helperLeaderScreen')">
+                        <span class="slot-label">P6 · LEADER</span>
+                        <div class="squad-slot-plus">+</div>
+                    </div>`;
+            }
+
+            const hasOwnSquad = selectedSquad.some((m, i) => m !== null && i !== LEADER_SLOT_INDEX);
+            document.getElementById('startBattleBtn').disabled = !hasOwnSquad || !selectedHelperLeaderId;
+            if (pendingStartAction === 'training') {
+                document.getElementById('startBattleBtn').innerText = `Start Training - ${trainingDifficultyPlaying.toUpperCase()}`;
+            } else {
+                document.getElementById('startBattleBtn').innerText = `Start ${currentMode.toUpperCase()} - Stage ${stageLabel(stageToPlay)}`;
+            }
+        }
+
+        let draggedData = null;
+
+        /* TAP-TO-SELECT + TAP-TO-PLACE STATE (works alongside drag & drop) */
+        let selectedRosterId = null;
+        let selectedSquadSlotForSwap = null;
+
+        function selectRosterCard(id) {
+            // Toggle: tapping the same card again deselects it
+            selectedRosterId = (selectedRosterId === id) ? null : id;
+            selectedSquadSlotForSwap = null; // picking a roster card cancels any pending swap
+            refreshSquadDisplays();
+        }
+
+        function handleSquadSlotClick(idx) {
+            // Case 1: a roster card is selected -> place it into this slot
+            if (selectedRosterId) {
+                const ninja = masterRoster.find(x => x.id === selectedRosterId);
+                if (ninja) {
+                    selectedSquad[idx] = { ...ninja, slot: `P${idx+1}`, maxHp: ninja.hp, hp: ninja.hp, state: { atkCount: ninja.starShine?1:0, spcCount: 0 }, isDead: false, col: slotCoords[idx].col, row: slotCoords[idx].row };
+                }
+                selectedRosterId = null;
+                refreshSquadDisplays();
+                return;
+            }
+
+            // Case 2: no roster card selected -> tap-to-swap between two squad slots
+            if (selectedSquadSlotForSwap === null) {
+                if (selectedSquad[idx]) { selectedSquadSlotForSwap = idx; refreshSquadDisplays(); }
+                return;
+            }
+            if (selectedSquadSlotForSwap === idx) { selectedSquadSlotForSwap = null; refreshSquadDisplays(); return; }
+
+            const temp = selectedSquad[idx];
+            selectedSquad[idx] = selectedSquad[selectedSquadSlotForSwap];
+            selectedSquad[selectedSquadSlotForSwap] = temp;
+            selectedSquad.forEach((m, i2) => {
+                if (m) { m.slot = `P${i2+1}`; m.col = slotCoords[i2].col; m.row = slotCoords[i2].row; }
+            });
+            selectedSquadSlotForSwap = null;
+            refreshSquadDisplays();
+        }
+
+        function dragRosterCard(e, ninjaId) {
+            draggedData = { type: 'roster', id: ninjaId };
+        }
+
+        function dragSquadCard(e, squadIndex) {
+            draggedData = { type: 'squad', index: squadIndex };
+        }
+
+        function allowDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function removeDropStyle(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function dropToSquad(e, targetIdx) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            if(!draggedData) return;
+
+            if(draggedData.type === 'roster') {
+                const ninja = masterRoster.find(x => x.id === draggedData.id);
+                if(selectedSquad.some(m => m && m.id === ninja.id)) return;
+                selectedSquad[targetIdx] = { ...ninja, slot: `P${targetIdx+1}`, maxHp: ninja.hp, hp: ninja.hp, state: { atkCount: ninja.starShine?1:0, spcCount: 0 }, isDead: false, col: slotCoords[targetIdx].col, row: slotCoords[targetIdx].row };
+            } else if(draggedData.type === 'squad') {
+                const sourceIdx = draggedData.index;
+                if(sourceIdx === targetIdx) return;
+                const temp = selectedSquad[targetIdx];
+                selectedSquad[targetIdx] = selectedSquad[sourceIdx];
+                selectedSquad[sourceIdx] = temp;
+                
+                selectedSquad.forEach((m, idx) => {
+                    if(m) { m.slot = `P${idx+1}`; m.col = slotCoords[idx].col; m.row = slotCoords[idx].row; }
+                });
+            }
+            draggedData = null;
+            refreshSquadDisplays();
+        }
+
+        function addFirstAvailable(id) {
+            const emptyIdx = selectedSquad.findIndex(m => m === null);
+            if(emptyIdx === -1) return;
+            if(selectedSquad.some(m => m && m.id === id)) return;
+            const n = masterRoster.find(x => x.id === id);
+            selectedSquad[emptyIdx] = { ...n, slot: `P${emptyIdx+1}`, maxHp: n.hp, hp: n.hp, state: { atkCount: n.starShine?1:0, spcCount: 0 }, isDead: false, col: slotCoords[emptyIdx].col, row: slotCoords[emptyIdx].row };
+            refreshSquadDisplays();
+        }
+
+        function removeFromSquad(idx) { 
+            selectedSquad[idx] = null; 
+            refreshSquadDisplays(); 
+        }
+
+        function startStage() {
+            battleMode = 'story';
+            currentStage = stageToPlay;
+            currentWaveInStage = 1;
+            stageStartTime = Date.now();
+            playerTeam = buildPlayerTeamFromSquad();
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('battleScreen').classList.remove('hidden');
+            const autoBtn = document.getElementById('btnAuto');
+            autoBtn.innerText = autoMode ? 'AUTO: ON' : 'AUTO: OFF';
+            autoBtn.classList.toggle('btn-active', autoMode);
+            document.getElementById('speedToggleBtn').innerText = `SPD: x${speedMultiplier}`;
+            loadWave();
+        }
+
+        function returnToMenuFromBattle() {
+            battleOver = true;
+            openScreen('mainMenuScreen');
+        }
+
+        // World bosses reuse existing roster characters (as their own 4★ card, obtainable via fragments)
+        const worldBossCharacterId = { 1: 'n3', 2: 'n6', 3: 'n2', 4: 'n7', 5: 'n1' }; // Kakashi, Gaara, Sasuke, Rock Lee, Naruto
+
+        function isBossStagePosition(stageNum) {
+            const pos = ((stageNum - 1) % 10) + 1;
+            return pos === 4 || pos === 7 || pos === 10;
+        }
+
+        let lastSpecialRewardText = '';
+
+        function grantStageClearSpecialRewards(stageNum, mode) {
+            let rewardLines = [];
+            if (isBossStagePosition(stageNum)) {
+                const world = Math.ceil(stageNum / 10);
+                const bossId = worldBossCharacterId[world];
+                const bossBase = masterRoster.find(n => n.id === bossId);
+                if (mode === 'easy') {
+                    materials.soldierCard += 1;
+                    materials.pill += 1;
+                    materials.scroll += 1;
+                    rewardLines.push(`+1 ${materialLabel('soldierCard')}`, `+1 ${materialLabel('pill')}`, `+1 ${materialLabel('scroll')}`);
+                } else {
+                    const fragQty = mode === 'hard' ? (2 + Math.floor(Math.random() * 3)) : (1 + Math.floor(Math.random() * 2));
+                    bossFragments[bossId] = (bossFragments[bossId] || 0) + fragQty;
+                    rewardLines.push(`+${fragQty} ${bossBase ? bossBase.name : ''} Fragment(s)`);
+                }
+            } else {
+                materials.soldierCard += 1;
+                rewardLines.push(`+1 ${materialLabel('soldierCard')}`);
+            }
+            saveGame();
+            return rewardLines.join(', ');
+        }
+
+        function generateEnemies(stage, waveInStage, mode) {
+            const slots = [{slot:'C1',col:0,row:0},{slot:'C2',col:1,row:0},{slot:'C3',col:2,row:0},{slot:'C4',col:0,row:1},{slot:'C5',col:1,row:1},{slot:'C6',col:2,row:1}];
+            const globalIndex = (stage - 1) * wavesPerStage + waveInStage; // 1..150, drives gradual difficulty
+            const isLastWave = waveInStage === wavesPerStage;
+            const isBossStage = isLastWave && isBossStagePosition(stage); // stage position 4/7/10 in its world
+            const isMiniBossStage = isLastWave && !isBossStagePosition(stage);
+            const mult = modeStatMult[mode];
+
+            // Enemy count grows steadily across all 150 waves, capping at 6 (the full grid)
+            const count = Math.min(6, 2 + Math.floor((globalIndex - 1) / 25));
+
+            // Faction/tier name changes as the run progresses, for flavor
+            const tierName = globalIndex <= 50 ? 'Scout' : globalIndex <= 100 ? 'Sound Ninja' : 'Elite Guard';
+
+            const baseHp = (220 + globalIndex * 12) * mult;
+            const baseAtk = (26 + globalIndex * 1.4) * mult;
+            const baseSpeed = 84 + Math.min(40, globalIndex * 0.3);
+
+            let eData = [];
+            for (let i = 0; i < count; i++) {
+                const isSpecialUnit = isLastWave && i === count - 1;
+                let name, hpMult = 1, atkMult = 1, sizeMult = 1;
+                if (isBossStage && isSpecialUnit) {
+                    const world = Math.ceil(stage / 10);
+                    const bossBase = masterRoster.find(n => n.id === worldBossCharacterId[world]);
+                    name = `BOSS ${bossBase ? bossBase.name : 'Unknown'}`;
+                    hpMult = 3.0; atkMult = 1.8; sizeMult = 1.3;
+                } else if (isMiniBossStage && isSpecialUnit) {
+                    name = `${tierName} Captain`;
+                    hpMult = 1.5; atkMult = 1.3; sizeMult = 1.15;
+                } else {
+                    name = `${tierName} ${i + 1}`;
+                }
+                eData.push({
+                    name,
+                    hp: Math.floor(baseHp * hpMult + Math.random() * 20),
+                    atk: Math.floor(baseAtk * atkMult + Math.random() * 5),
+                    speed: Math.floor(baseSpeed + Math.random() * 10),
+                    role: 'attacker',
+                    starShine: isSpecialUnit,
+                    sizeMult
+                });
+            }
+
+            const slotIndices = shuffleArray([0,1,2,3,4,5]).slice(0, count);
+            return slots.map((s, idx) => {
+                const dataIdx = slotIndices.indexOf(idx);
+                const m = dataIdx !== -1 ? eData[dataIdx] : null;
+                return m ? { ...s, ...m, maxHp: m.hp, state: { atkCount: m.starShine?1:0, spcCount: 0 }, isDead: false } : null;
+            });
+        }
+
+        function loadWave() {
+            document.getElementById('waveBadge').innerText = `${currentMode.toUpperCase()} ${stageLabel(currentStage)} · Wave ${currentWaveInStage}/${wavesPerStage}`;
+            enemyTeam = generateEnemies(currentStage, currentWaveInStage, currentMode);
+            battleOver = false;
+            document.getElementById('logs').innerHTML = '';
+            renderGrids();
+            startBattleLoop();
+        }
+
+        function grantWaveReward() {
+            const reward = Math.floor((80 + lastClearedGlobalIndex * 6) * modeRewardMult[currentMode]);
+            silver += reward; playerLevel += 1;
+            updateCurrencyUI();
+            return reward;
+        }
+
+        function openIntermission() {
+            const reward = grantWaveReward();
+            selectedIntermissionSlot = null;
+            document.getElementById('battleScreen').classList.add('hidden');
+            document.getElementById('intermissionScreen').classList.remove('hidden');
+            document.getElementById('intermissionTitle').innerText = `STAGE ${lastClearedLabel} · WAVE ${lastClearedWave}/${wavesPerStage} CLEARED! (+${reward} Silver, +1 LVL)`;
+            renderIntermissionSquad();
+        }
+
+        function openVictoryScreen(starsEarned) {
+            const starsDisplay = '⭐'.repeat(starsEarned || 0) + '☆'.repeat(3 - (starsEarned || 0));
+            const isModeComplete = currentStage === totalStages;
+            let rewardText;
+            if (isModeComplete) {
+                const finalSilver = Math.floor(1500 * modeRewardMult[currentMode]), finalGold = Math.floor(60 * modeRewardMult[currentMode]);
+                silver += finalSilver; gold += finalGold; playerLevel += 5; updateCurrencyUI();
+                rewardText = `ALL ${totalStages} STAGES OF ${currentMode.toUpperCase()} COMPLETE! ${starsDisplay}<br>+${finalSilver} Silver, +${finalGold} Gold`;
+            } else {
+                const reward = grantWaveReward();
+                rewardText = `STAGE ${lastClearedLabel} CLEARED! ${starsDisplay}<br>+${reward} Silver, +1 LVL`;
+            }
+            if (lastSpecialRewardText) rewardText += `<br>${lastSpecialRewardText}`;
+            selectedHelperLeaderId = null; // must pick a Helper Leader again for the next stage
+            saveGame();
+            openScreen('victoryScreen');
+            document.getElementById('victorySubtitle').innerHTML = rewardText;
+        }
+
+        let selectedIntermissionSlot = null;
+        let draggedIntermissionIdx = null;
+
+        function renderIntermissionSquad() {
+            const grid = document.getElementById('intermissionSquadGrid'); grid.innerHTML = '';
+            playerTeam.forEach((p, i) => {
+                const isSwapSelected = selectedIntermissionSlot === i;
+                if (p) {
+                    grid.innerHTML += `
+                        <div class="squad-slot" style="height:96px;" onclick="handleIntermissionSlotClick(${i})" ondragover="allowDrop(event)" ondragleave="removeDropStyle(event)" ondrop="dropToIntermissionSlot(event, ${i})">
+                            <span class="slot-label">P${i+1}</span>
+                            <div class="ninja-card-item portrait-mode portrait-compact ${p.isDead ? '' : 'selected-glow'} ${isSwapSelected ? 'tap-active' : ''}">
+                                ${portraitBlock(p, { level: p.level, hpPercent: Math.max(0,(p.hp/p.maxHp)*100), hpText: `${p.hp}/${p.maxHp}`, dead: p.isDead, deadLabel: p.isDead })}
+                            </div>
+                        </div>`;
+                } else {
+                    grid.innerHTML += `
+                        <div class="squad-slot" style="height:96px;" onclick="handleIntermissionSlotClick(${i})" ondragover="allowDrop(event)" ondragleave="removeDropStyle(event)" ondrop="dropToIntermissionSlot(event, ${i})">
+                            <span class="slot-label">P${i+1}</span>
+                            <span class="empty-slot-text">Empty</span>
+                        </div>`;
+                }
+            });
+        }
+
+        function swapPlayerTeamSlots(i, j) {
+            if (i === j) return;
+            const temp = playerTeam[j];
+            playerTeam[j] = playerTeam[i];
+            playerTeam[i] = temp;
+            playerTeam.forEach((m, idx) => {
+                if (m) { m.slot = `P${idx+1}`; m.col = slotCoords[idx].col; m.row = slotCoords[idx].row; }
+            });
+        }
+
+        function dragIntermissionCard(e, idx) {
+            draggedIntermissionIdx = idx;
+        }
+
+        function dropToIntermissionSlot(e, targetIdx) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            if (draggedIntermissionIdx === null) return;
+            swapPlayerTeamSlots(draggedIntermissionIdx, targetIdx);
+            draggedIntermissionIdx = null;
+            renderIntermissionSquad();
+        }
+
+        function handleIntermissionSlotClick(idx) {
+            if (selectedIntermissionSlot === null) {
+                if (playerTeam[idx]) { selectedIntermissionSlot = idx; renderIntermissionSquad(); }
+                return;
+            }
+            if (selectedIntermissionSlot === idx) { selectedIntermissionSlot = null; renderIntermissionSquad(); return; }
+            swapPlayerTeamSlots(selectedIntermissionSlot, idx);
+            selectedIntermissionSlot = null;
+            renderIntermissionSquad();
+        }
+
+        function healAllSquad() {
+            if(silver<100) return alert("Not enough Silver!");
+            silver-=100; updateCurrencyUI(); playerTeam.forEach(p=>{if(p&&!p.isDead)p.hp=p.maxHp;}); renderIntermissionSquad();
+        }
+        function reviveFallenSquad() {
+            if(silver<200) return alert("Not enough Silver!");
+            silver-=200; updateCurrencyUI(); playerTeam.forEach(p=>{if(p&&p.isDead){p.isDead=false; p.hp=Math.floor(p.maxHp/2);}}); renderIntermissionSquad();
+        }
+        function proceedToNextWave() {
+            document.getElementById('intermissionScreen').classList.add('hidden'); document.getElementById('battleScreen').classList.remove('hidden');
+            if (battleMode === 'training') loadTrainingWave(); else loadWave();
+        }
+
+        function renderGrids() {
+            renderTeam('enemyGrid', enemyTeam, 'enemy', [3,4,5,0,1,2]);
+            renderTeam('playerGrid', playerTeam, 'player', [0,1,2,3,4,5]);
+        }
+        function renderTeam(gId, tData, type, order) {
+            const c = document.getElementById(gId); c.innerHTML = '';
+            order.forEach(i => {
+                const card = tData[i];
+                if (!card) { c.innerHTML += `<div class="squad-slot" style="height:128px;"><span class="slot-label">${type==='enemy'?'C':'P'}${i+1}</span><span style="font-size:8px; color:#5b6282;">Empty</span></div>`; } 
+                else {
+                    const hpP = Math.max(0,(card.hp/card.maxHp)*100), spcP = Math.min(100,((card.state.atkCount%3)/2)*100), rageP = Math.min(100,((card.state.spcCount%3)/2)*100);
+                    const scaleStyle = card.sizeMult && card.sizeMult !== 1 ? `transform: scale(${card.sizeMult}); z-index:5;` : '';
+                    c.innerHTML += `<div class="card ${type} portrait-mode ${card.isDead?'dead':''}" id="card-${card.slot}" style="${scaleStyle}">
+                        <div class="side-bar side-bar-left"><div class="bar-fill-left" style="height:${spcP}%"></div></div>
+                        <div class="side-bar side-bar-right"><div class="bar-fill-right" style="height:${rageP}%"></div></div>
+                        <div class="card-slot-tag">${card.slot}</div>
+                        ${portraitBlock(card, { level: card.level, hpPercent: hpP, hpText: `${Math.max(0,card.hp)} / ${card.maxHp}`, statLine: `SPD:${card.speed}` })}
+                    </div>`;
+                }
+            });
+        }
+
+        function addLog(msg, type='system') {
+            const l = document.getElementById('logs'); l.innerHTML += `<div class="log-entry log-${type}">${msg}</div>`; l.scrollTop = l.scrollHeight;
+        }
+
+        function getTarget(atk, defTeam) {
+            const active = defTeam.filter(c => c && !c.isDead);
+            if (!active.length) return null;
+            let t = active.find(c => c.col === atk.col && c.row === 0) || active.find(c => (c.col === atk.col-1 || c.col === atk.col+1) && c.row === 0) || active.find(c => (c.col === atk.col-2 || c.col === atk.col+2) && c.row === 0);
+            if (!t) t = active.find(c => c.col === atk.col && c.row === 1) || active.find(c => (c.col === atk.col-1 || c.col === atk.col+1) && c.row === 1) || active.find(c => (c.col === atk.col-2 || c.col === atk.col+2) && c.row === 1);
+            return t || active[0];
+        }
+
+        function getHealTarget(caster, allyTeam) {
+            // Heal the living ally with the lowest HP% (caster itself counts as a valid target)
+            const active = allyTeam.filter(c => c && !c.isDead);
+            if (!active.length) return null;
+            return active.reduce((lowest, c) => (c.hp / c.maxHp) < (lowest.hp / lowest.maxHp) ? c : lowest, active[0]);
+        }
+
+        function createFloatingDamage(targetSlot, amount, attackType, isHeal=false) {
+            const targetEl = document.getElementById(`card-${targetSlot}`);
+            const fieldEl = document.getElementById('battlefieldArea');
+            if(!targetEl || !fieldEl) return;
+
+            const tRect = targetEl.getBoundingClientRect();
+            const fRect = fieldEl.getBoundingClientRect();
+
+            const dmgEl = document.createElement('div');
+            dmgEl.className = `floating-dmg ${isHeal ? 'dmg-heal' : (attackType === 'RAGE' ? 'dmg-rage' : attackType === 'SPECIAL' ? 'dmg-special' : 'dmg-normal')}`;
+            dmgEl.innerText = isHeal ? `+${amount}` : `-${amount}`;
+
+            dmgEl.style.left = `${(tRect.left - fRect.left) + (tRect.width / 2) - 15}px`;
+            dmgEl.style.top = `${(tRect.top - fRect.top) + 10}px`;
+
+            fieldEl.appendChild(dmgEl);
+            setTimeout(() => dmgEl.remove(), 800);
+        }
+
+        async function startBattleLoop() {
+            addLog(`--- ${currentMode.toUpperCase()} STAGE ${stageLabel(currentStage)} · WAVE ${currentWaveInStage}/${wavesPerStage} STARTED ---`);
+            while(!battleOver) {
+                if(isPaused){ await sleep(300); continue; }
+                for(let i=0; i<6; i++) {
+                    if(battleOver) break;
+                    let p=playerTeam[i], e=enemyTeam[i], q=[];
+                    if(p&&!p.isDead && e&&!e.isDead) q = p.speed>=e.speed ? [p,e] : [e,p];
+                    else if(p&&!p.isDead) q=[p]; else if(e&&!e.isDead) q=[e];
+
+                    for(let a of q) {
+                        if(battleOver) break;
+                        while(isPaused) await sleep(300);
+                        if(a.isDead) continue;
+                        let isP = playerTeam.some(x=>x&&x.slot===a.slot);
+                        let isHealer = a.role === 'healer';
+                        let allyTeam = isP ? playerTeam : enemyTeam;
+                        let enemyTeamRef = isP ? enemyTeam : playerTeam;
+                        let t = isHealer ? getHealTarget(a, allyTeam) : getTarget(a, enemyTeamRef);
+                        if(!t) { battleOver = true; break; }
+
+                        let aType = 'NORMAL';
+                        if(a.state.atkCount%3 === 1) { a.state.spcCount++; aType = (a.state.spcCount%3 === 0) ? 'RAGE' : 'SPECIAL'; }
+                        
+                        await executeAttack(a, t, isP, aType, isHealer);
+                        a.state.atkCount++;
+
+                        if(!playerTeam.some(x=>x&&!x.isDead)) { 
+                            selectedHelperLeaderId = null;
+                            saveGame();
+                            if (battleMode === 'training') {
+                                addLog('TRAINING FAILED!');
+                                setTimeout(()=>{ battleMode = 'story'; openScreen('trainingGroundsScreen'); }, 1500);
+                            } else {
+                                addLog('STAGE FAILED!'); 
+                                setTimeout(()=>{ openScreen('stageSelectScreen'); }, 1500); 
+                            }
+                            battleOver=true; break; 
+                        }
+                        if(!enemyTeam.some(x=>x&&!x.isDead)) { 
+                            if (battleMode === 'training') {
+                                handleTrainingWaveClear();
+                                break;
+                            }
+                            lastClearedLabel = stageLabel(currentStage);
+                            lastClearedWave = currentWaveInStage;
+                            lastClearedGlobalIndex = (currentStage - 1) * wavesPerStage + currentWaveInStage;
+                            addLog(`STAGE ${lastClearedLabel} · WAVE ${lastClearedWave}/${wavesPerStage} CLEARED!`);
+
+                            const stageJustFinished = currentWaveInStage === wavesPerStage;
+                            battleOver = true;
+
+                            if (stageJustFinished) {
+                                // Stage fully cleared: ALWAYS show the Victory screen (ignores AUTO) —
+                                // next stage must be picked manually from Stage Select.
+                                modeProgress[currentMode].cleared = Math.max(modeProgress[currentMode].cleared, currentStage);
+
+                                // FINAL star rule: deaths + clear time combined.
+                                // 3⭐ = 0 deaths AND cleared within the world's par time.
+                                // 2⭐ = 0 deaths but too slow, OR 1-2 deaths (any time).
+                                // 1⭐ = 3+ deaths, regardless of time.
+                                const deadCount = playerTeam.filter(p => p && p.isDead).length;
+                                const elapsedMs = Date.now() - stageStartTime;
+                                const world = Math.ceil(currentStage / 10);
+                                const parTimeMs = (30 + world * 30) * 1000; // World1:60s, World2:90s, ... World5:180s
+                                let starsEarned;
+                                if (deadCount >= 3) starsEarned = 1;
+                                else if (deadCount === 0 && elapsedMs <= parTimeMs) starsEarned = 3;
+                                else starsEarned = 2;
+
+                                const sd = getStageData(currentMode, currentStage);
+                                sd.cleared = true;
+                                sd.stars = Math.max(sd.stars, starsEarned);
+                                sd.bestTimeMs = (sd.bestTimeMs === null) ? elapsedMs : Math.min(sd.bestTimeMs, elapsedMs);
+
+                                lastSpecialRewardText = grantStageClearSpecialRewards(currentStage, currentMode);
+                                setTimeout(()=>openVictoryScreen(starsEarned), 1200);
+                            } else {
+                                // Mid-stage wave cleared: AUTO skips the intermission and jumps straight to the next wave.
+                                currentWaveInStage++;
+                                if (autoMode) {
+                                    const reward = grantWaveReward();
+                                    addLog(`[AUTO] +${reward} Silver, +1 LVL — advancing to next wave...`, 'system');
+                                    setTimeout(()=>{ loadWave(); }, 900);
+                                } else {
+                                    setTimeout(()=>openIntermission(), 1200);
+                                }
+                            }
+                            break;
+                        }
+                        await sleep(baseDelay/speedMultiplier);
+                    }
+                }
+            }
+        }
+
+        async function executeAttack(a, t, isP, aType, isHeal=false) {
+            const aEl = document.getElementById(`card-${a.slot}`), tEl = document.getElementById(`card-${t.slot}`);
+            
+            if(aEl) {
+                aEl.classList.add('attacking');
+                if(isHeal) aEl.classList.add('atk-heal');
+                else if(aType === 'RAGE') aEl.classList.add('atk-rage');
+                else if(aType === 'SPECIAL') aEl.classList.add('atk-special');
+                else aEl.classList.add('atk-normal');
+            }
+
+            await sleep(250/speedMultiplier);
+            const skillMults = getSkillMultipliers(a.skillLevel);
+            let mult = aType==='RAGE'? skillMults.rage : aType==='SPECIAL'? skillMults.special : 1.0;
+
+            if(isHeal) {
+                let healAmt = Math.floor((a.atk + (Math.random()*8-4)) * mult * 0.8);
+                t.hp = Math.min(t.maxHp, t.hp + healAmt);
+                createFloatingDamage(t.slot, healAmt, aType, true);
+                let logT = isP ? 'heal-player' : 'heal-enemy';
+                addLog(`${a.name} ${aType!=='NORMAL'?`[${aType}]`:''} healed ${t.name} for ${healAmt} HP.`, logT);
+            } else {
+                let dmg = Math.floor((a.atk + (Math.random()*8-4)) * mult);
+                t.hp -= dmg;
+                createFloatingDamage(t.slot, dmg, aType, false);
+                if(tEl) tEl.classList.add('hit');
+                let logT = aType==='RAGE'?'rage' : aType==='SPECIAL'?'special' : (isP?'player':'enemy');
+                addLog(`${a.name} ${aType!=='NORMAL'?`[${aType}]`:''} hit ${t.name} for ${dmg} DMG${t.hp<=0?' [K.O]':''}.`, logT);
+                if(t.hp<=0) { t.hp=0; t.isDead=true; }
+            }
+
+            renderGrids();
+            
+            await sleep(250/speedMultiplier);
+            if(aEl) aEl.classList.remove('attacking', 'atk-normal', 'atk-special', 'atk-rage', 'atk-heal');
+            if(tEl) tEl.classList.remove('hit');
+        }
+
+        function sleep(ms) { return new Promise(r=>setTimeout(r, ms)); }
+        function cycleSpeed() { speedMultiplier = speedMultiplier >= 3 ? 1 : speedMultiplier + 1; document.getElementById('speedToggleBtn').innerText = `SPD: x${speedMultiplier}`; }
+        function togglePause() { isPaused=!isPaused; const b=document.getElementById('btnPause'); b.innerText=isPaused?"RESUME":"PAUSE"; b.classList.toggle('btn-active', isPaused); }
+
+        /* STARTUP: load any existing save, then decide which screen to show first. */
+        (function initGame() {
+            const hadSave = loadGame();
+            ensureCardsMigrated(); // no-op if already migrated/loaded; populates fresh instances for new players
+            if (hadSave && starterChosen) {
+                document.getElementById('starterSelectScreen').classList.add('hidden');
+                document.getElementById('mainMenuScreen').classList.remove('hidden');
+            } else {
+                renderStarterSelect();
+            }
+            renderMenuSquadEditor();
+            updateCurrencyUI();
+        })();
+    </script>
+</body>
+</html>
